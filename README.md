@@ -21,32 +21,12 @@ This README focuses on **what technologies are used** and **how the frontend/bac
 - **Realtime (client)**: `socket.io-client` with a provider + hooks pattern
 - **Tooling**: ESLint (type-aware) + Prettier
 
-### Backend (`backend/`)
-
-- **Runtime**: Node.js (ESM) + TypeScript
-- **HTTP server**: Express 5
-- **Database**: MongoDB via Mongoose
-- **Security headers**: `helmet`
-- **CORS**: `cors` middleware (origin controlled by env var)
-- **Env loading**: `dotenv/config`
-- **Dev runner**: `tsx` (including watch mode)
-- **Tooling**: ESLint (type-aware) + Prettier
-
----
 
 ## Project structure
 
 ```
 full-stack-starter-code/
-  backend/
-    src/
-      index.ts           # Express app bootstrap (middleware + routes + start)
-      utils.ts           # Mongo connection + startServer helper
-      controllers/       # Route handlers (business logic)
-      models/            # Mongoose schemas/models
-      routes/            # Express routers
-      types/             # Backend TypeScript types (params/bodies/shared shapes)
-      validators/        # Express request validation middleware
+
   frontend/
     src/
       main.tsx           # React entry + Redux Provider
@@ -65,14 +45,6 @@ full-stack-starter-code/
 
 ## Setup / installation
 
-This repo is **two separate Node projects** (`backend/` and `frontend/`). Install dependencies in each.
-
-### Backend
-
-```bash
-cd backend
-npm i
-```
 
 ### Frontend
 
@@ -85,13 +57,6 @@ npm i
 
 ## Environment variables
 
-### Backend (`backend/.env`)
-
-Used in `backend/src/index.ts`:
-
-- **`MONGODB_URI`** (required): Mongo connection string
-- **`FRONTEND_URL`**: allowed CORS origin (example: `http://localhost:5173`)
-- **`PORT`**: server port (defaults to `3000`)
 
 ### Frontend (`frontend/.env.development`, `frontend/.env.production`)
 
@@ -103,16 +68,7 @@ Used in `frontend/src/consts/consts.ts`:
 
 ## Running locally
 
-Run the backend and frontend in **two terminals**.
-
-### Terminal 1: backend
-
-```bash
-cd backend
-npm run dev
-```
-
-### Terminal 2: frontend
+### Terminal: frontend
 
 ```bash
 cd frontend
@@ -174,132 +130,47 @@ To enable sockets, add URLs in `frontend/src/ui/Root.tsx` (currently it’s an e
 Note: there is **no Socket.IO server** implemented in the backend in this repo.
 
 ---
-
-## Backend architecture
-
-### Bootstrap and middleware
-
-`backend/src/index.ts`:
-
-- Creates an Express app
-- Adds middleware:
-  - `helmet()`
-  - `express.json()`
-  - `express.urlencoded({ extended: true })`
-  - `cors({ origin: process.env.FRONTEND_URL, credentials: true })`
-- Registers routers:
-  - `/users` → `usersRouter`
-  - `/posts` → `postsRouter`
-- Adds fallback handlers:
-  - 404 handler for unknown routes
-  - last-resort error handler (500)
-- Reads config from env:
-  - `PORT` (default 3000)
-  - `MONGODB_URI` (required)
-- Connects to MongoDB and starts the server
-
-`backend/src/utils.ts`:
-
-- `connectToMongoDB(uri)` uses `mongoose.connect(...)`
-- `startServer(app, port)` starts the HTTP server and returns the `Server` instance
-
-### Request / DTO types
-
-The backend keeps shared TypeScript shapes under `backend/src/types/` (examples: `ObjectIdParams`, `CreateUserBody`, `CreatePostBody`). These are used in:
-
-- **Controllers**: casting `req.params` / `req.body` to known shapes
-- **Validators**: casting `req.params` / `req.body` for field checks
-
-Note: these types are **compile-time only** (they don’t change runtime validation/behavior).
-
-### Data models
-
-- `backend/src/models/User.model.ts`
-  - `email` (unique), `name`, `posts: ObjectId[]` referencing Post
-- `backend/src/models/Post.model.ts`
-  - `createdBy: ObjectId` referencing User, `title`, `content`
-
-Relationship:
-
-- A `User` owns many `Post`s (via `User.posts[]`)
-- A `Post` belongs to a `User` (via `Post.createdBy`)
-
----
-
-## Backend routes (concise)
-
-### `GET /health`
-
-- Returns `{ ok: true }`
-
-### Users: `/users` (`backend/src/routes/users.routes.ts`)
-
-- **GET `/users`**
-  - 200: list all users
-  - 500: server error
-- **GET `/users/:id`**
-  - 200: user
-  - 400: invalid ObjectId (`{ message: "invalid user id" }`)
-  - 404: not found
-  - 500: server error
-- **POST `/users`**
-  - Body: `{ email: string, name: string }`
-  - 201: created user
-  - 400: missing/invalid fields
-    - `email` and `name` are required
-    - `email` and `name` must be strings
-    - `email` and `name` cannot be empty (whitespace-only is rejected)
-  - 409: duplicate email
-  - 500: server error
-
-### Posts: `/posts` (`backend/src/routes/posts.routes.ts`)
-
-- **GET `/posts`**
-  - 200: list posts (sorted newest first), `createdBy` populated with user `email` + `name`
-  - 500: server error
-- **GET `/posts/:id`**
-  - 200: post (with populated `createdBy`)
-  - 400: invalid ObjectId (`{ message: "invalid id" }`)
-  - 404: not found
-  - 500: server error
-- **POST `/posts`**
-  - Body: `{ createdBy: string, title: string, content: string }`
-  - 201: created post
-  - 400: missing fields / invalid `createdBy`
-    - `createdBy`, `title`, `content` are required
-    - `createdBy` must be a valid ObjectId (`{ message: "createdBy is not a valid ObjectId" }`)
-  - 404: user not found
-  - 500: server error
-  - Side effect: pushes the post id into the owning user’s `posts[]`
-- **PATCH `/posts/:id`**
-  - Body: `{ title?: string, content?: string }` (at least one required)
-  - 200: updated post
-  - 400: invalid ObjectId / no fields provided (`{ message: "provide title and/or content" }`)
-  - 404: not found
-  - 500: server error
-- **DELETE `/posts/:id`**
-  - 204: deleted
-  - 400: invalid ObjectId (`{ message: "invalid id" }`)
-  - 404: not found
-  - 500: server error
-  - Side effect: pulls the post id from the owning user’s `posts[]`
-
----
-
-## Scripts
-
-### Backend (`backend/package.json`)
-
-- `npm run dev`: run with watch (`tsx watch src/index.ts`)
-- `npm run start`: run once (`tsx src/index.ts`)
-- `npm run build`: compile TS (`tsc`)
-- `npm run typecheck`: typecheck only (`tsc --noEmit`)
-- `npm run lint`: run ESLint
-- `npm run lint:fix`: run ESLint with auto-fix
-
 ### Frontend (`frontend/package.json`)
 
 - `npm run dev`: start Vite dev server
 - `npm run build`: typecheck/build
 - `npm run preview`: preview the production build
 - `npm run check`: typecheck + lint + format check
+
+---
+
+## Session Summary — June 3, 2026
+
+### Overview
+Built the full HomeDrive frontend UI from scratch — layout shell, design system, and all Home page sections — in a single session.
+
+### Design System
+- Translated the original `tokens.css` (`--color-bg`, `--color-hero`, `--color-surface`, etc.) into Tailwind CSS v4 semantic variables inside `src/styles/index.css`
+- Mapped tokens to shadcn/ui variables: `--background`, `--foreground`, `--card`, `--primary`, `--muted`, `--accent`, `--border`, `--ring`, `--destructive`
+- Added Inter font (Google Fonts), custom scrollbar styles, and font-smoothing from `global.css`
+- Defined dark mode palette derived from `--color-dark-card` / `--color-dark-card-alt`
+
+### Layout Shell (`src/ui/`)
+| File | Description |
+|---|---|
+| `Root.tsx` | App shell — `Sidebar` + `Navbar` + `<Outlet>` |
+| `components/Sidebar.tsx` | Collapsible icon rail (56px) that expands to 208px on hover. 7 nav links, Settings + avatar at bottom. Uses `--color-hero` for logo/avatar accent. |
+| `components/Navbar.tsx` | Top bar with centered search input, `Bot` (AI) + `Bell` (notifications w/ badge) icon buttons. `bg-card` to match sidebar. |
+
+### Home Page Sections (`src/ui/pages/Home.tsx`)
+| Component | Description |
+|---|---|
+| Greeting | Time-aware ("Good morning/afternoon/evening, Tal") with subtitle |
+| `StorageCard` | Storage gauge — large GB number, progress bar using `--primary`, "Out of X GB total" caption |
+| `MediaTypesCard` | Documents / Photos / Videos / Audio rows, each a full-width hover button with `bg-secondary` highlight |
+| `CreateNewCard` | Dark panel (`--color-dark-card`) with drop hint, "Create New" heading, and 3 action rows (New Document ⌘D, New Folder ⌘F, Upload Files ⌘U) |
+| `WorkspacesSection` | 2-column grid of workspace buttons — icon tile, name, file count, online dot indicator |
+| `RecentActivity` | File list card with divider rows — icon, filename, smart timestamp (Today/Yesterday/relative), file size |
+| `PhotoCollage` | Pinterest-style masonry grid using CSS `columns`. `columns-2 → sm:columns-3 → lg:columns-4`. Hover: zoom + dark overlay. Lazy loaded. |
+
+### Key Design Decisions
+- All cards use `bg-card` (white) on a `bg-background` (`#E8EAED`) page — inverted from the original flat design
+- Cards styled without shadcn `Card` wrappers for tighter control — plain `div`/`button` with `rounded-2xl shadow-sm`
+- Interactive cards are `<button>` elements with `active:scale-[0.98]` press feedback
+- Responsive layout: `max-w-5xl mx-auto` container with `px-6` side padding
+- Branches: `sidebar` → `navbar` → `dashbord` → `recentActivity` → `collage` → `summery`
