@@ -2,6 +2,7 @@ import { SocketProvider } from '@/sockets/SocketProvider';
 import { useMemo } from 'react';
 import { Outlet } from 'react-router';
 import { Sidebar } from '@/ui/components/Sidebar';
+import { Navbar } from '@/ui/components/Navbar';
 
 export function Root() {
   // insert urls to create a socket connection to here
@@ -14,9 +15,12 @@ export function Root() {
     <SocketProvider urls={socketUrls}>
       <div className="flex h-screen overflow-hidden">
         <Sidebar user={user} />
-        <main className="flex-1 overflow-auto bg-muted/30">
-          <Outlet />
-        </main>
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Navbar notificationCount={3} />
+          <main className="flex-1 overflow-auto bg-muted/30">
+            <Outlet />
+          </main>
+        </div>
       </div>
     </SocketProvider>
   );
