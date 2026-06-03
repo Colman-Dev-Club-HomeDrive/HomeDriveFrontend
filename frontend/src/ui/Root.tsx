@@ -17,7 +17,7 @@ export function Root() {
         <Sidebar user={user} />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Navbar notificationCount={3} />
-          <main className="flex-1 overflow-auto bg-muted/30">
+          <main className="flex-1 overflow-auto">
             <Outlet />
           </main>
         </div>

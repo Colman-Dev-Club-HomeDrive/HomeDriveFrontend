@@ -8,7 +8,7 @@ type NavbarProps = {
 
 export function Navbar({ notificationCount = 0 }: NavbarProps) {
   return (
-    <header className="flex h-14 shrink-0 items-center gap-4 border-b border-border bg-background px-4">
+    <header className="flex h-14 shrink-0 items-center gap-4 border-b border-border bg-card px-4">
       {/* Left — spacer so search stays centered */}
       <div className="flex-1" />
 

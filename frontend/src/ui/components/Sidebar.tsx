@@ -29,10 +29,13 @@ type SidebarProps = {
 
 export function Sidebar({ user }: SidebarProps) {
   return (
-    <aside className="flex h-screen w-14 flex-col items-center border-r border-border bg-background transition-all duration-300 hover:w-52">
+    <aside className="flex h-screen w-14 flex-col items-center border-r border-border bg-card transition-all duration-300 hover:w-52">
       {/* Logo */}
       <div className="flex h-14 w-full shrink-0 items-center justify-start px-4">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-600">
+        <div
+          className="flex size-9 shrink-0 items-center justify-center rounded-xl"
+          style={{ backgroundColor: 'var(--color-hero)' }}
+        >
           <Cloud className="size-5 text-white" />
         </div>
       </div>
@@ -52,7 +55,7 @@ export function Sidebar({ user }: SidebarProps) {
             }
           >
             <Icon className="size-4.5 shrink-0" />
-            <span className="whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover:opacity-100 [aside:hover_&]:opacity-100">
+            <span className="whitespace-nowrap opacity-0 transition-opacity duration-200 [aside:hover_&]:opacity-100">
               {label}
             </span>
           </NavLink>
@@ -77,7 +80,10 @@ export function Sidebar({ user }: SidebarProps) {
         </NavLink>
 
         <div className="flex h-10 w-full items-center gap-3 overflow-hidden rounded-lg px-2.5">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-600 text-xs font-semibold text-white">
+          <div
+            className="flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+            style={{ backgroundColor: 'var(--color-hero)' }}
+          >
             {(user?.name ?? 'U').charAt(0).toUpperCase()}
           </div>
           <span className="whitespace-nowrap text-sm text-muted-foreground opacity-0 transition-opacity duration-200 [aside:hover_&]:opacity-100">
