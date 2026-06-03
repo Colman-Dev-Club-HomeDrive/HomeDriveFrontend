@@ -3,6 +3,7 @@ import { MediaTypesCard } from '@/ui/components/MediaTypesCard';
 import { CreateNewCard } from '@/ui/components/CreateNewCard';
 import { WorkspacesSection } from '@/ui/components/WorkspacesSection';
 import { RecentActivity } from '@/ui/components/RecentActivity';
+import { PhotoCollage } from '@/ui/components/PhotoCollage';
 
 // TODO: replace with real user from auth/store
 const USER_NAME = 'Tal';
@@ -42,6 +43,9 @@ export function Home() {
 
       {/* Recent Activity */}
       <RecentActivity />
+
+      {/* Photo Collage */}
+      <PhotoCollage />
     </div>
   );
 }
