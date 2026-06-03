@@ -2,6 +2,7 @@ import { StorageCard } from '@/ui/components/StorageCard';
 import { MediaTypesCard } from '@/ui/components/MediaTypesCard';
 import { CreateNewCard } from '@/ui/components/CreateNewCard';
 import { WorkspacesSection } from '@/ui/components/WorkspacesSection';
+import { RecentActivity } from '@/ui/components/RecentActivity';
 
 // TODO: replace with real user from auth/store
 const USER_NAME = 'Tal';
@@ -38,6 +39,9 @@ export function Home() {
 
       {/* Workspaces */}
       <WorkspacesSection />
+
+      {/* Recent Activity */}
+      <RecentActivity />
     </div>
   );
 }
