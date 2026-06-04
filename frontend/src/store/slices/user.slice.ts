@@ -5,7 +5,7 @@ type UserState = User;
 
 const initialState: UserState = {
   id: crypto.randomUUID(),
-  name: 'Itay'
+  name: 'the king'
 };
 
 export const userSlice = createSlice({
@@ -21,7 +21,7 @@ export const userSlice = createSlice({
     },
     resetUser: (state) => {
       state.id = crypto.randomUUID();
-      state.name = 'Itay';
+      state.name = 'the king';
     }
   }
 });

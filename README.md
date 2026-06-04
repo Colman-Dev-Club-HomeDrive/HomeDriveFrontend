@@ -153,9 +153,9 @@ Built the full HomeDrive frontend UI from scratch — layout shell, design syste
 ### Layout Shell (`src/ui/`)
 | File | Description |
 |---|---|
-| `Root.tsx` | App shell — `Sidebar` + `Navbar` + `<Outlet>` |
+| `Root.tsx` | App shell — `Sidebar` + `AppHeader` + `<Outlet>` |
 | `components/Sidebar.tsx` | Collapsible icon rail (56px) that expands to 208px on hover. 7 nav links, Settings + avatar at bottom. Uses `--color-hero` for logo/avatar accent. |
-| `components/Navbar.tsx` | Top bar with centered search input, `Bot` (AI) + `Bell` (notifications w/ badge) icon buttons. `bg-card` to match sidebar. |
+| `components/AppHeader.tsx` | Top bar with centered search input, `Bot` (AI) + `Bell` (notifications w/ badge) icon buttons. `bg-card` to match sidebar. |
 
 ### Home Page Sections (`src/ui/pages/Home.tsx`)
 | Component | Description |
@@ -173,4 +173,4 @@ Built the full HomeDrive frontend UI from scratch — layout shell, design syste
 - Cards styled without shadcn `Card` wrappers for tighter control — plain `div`/`button` with `rounded-2xl shadow-sm`
 - Interactive cards are `<button>` elements with `active:scale-[0.98]` press feedback
 - Responsive layout: `max-w-5xl mx-auto` container with `px-6` side padding
-- Branches: `sidebar` → `navbar` → `dashbord` → `recentActivity` → `collage` → `summery`
+- Branches: `sidebar` → `appheader` → `dashbord` → `recentActivity` → `collage` → `summery`

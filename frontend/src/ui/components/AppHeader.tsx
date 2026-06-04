@@ -2,11 +2,11 @@ import { Bell, Bot, Search } from 'lucide-react';
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
 
-type NavbarProps = {
+type AppHeaderProps = {
   notificationCount?: number;
 };
 
-export function Navbar({ notificationCount = 0 }: NavbarProps) {
+export function AppHeader({ notificationCount = 0 }: AppHeaderProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-4 border-b border-border bg-card px-4">
       {/* Left — spacer so search stays centered */}
