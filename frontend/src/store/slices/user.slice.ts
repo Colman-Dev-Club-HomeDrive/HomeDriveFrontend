@@ -37,4 +37,5 @@ export const { setUser, updateUserName, resetUser, setNotificationCount } = user
 export const selectUser = (state: { user: UserState }) => state.user;
 export const selectNotificationCount = (state: { user: UserState }) => state.user.notificationCount;
 
+
 export default userSlice.reducer;
