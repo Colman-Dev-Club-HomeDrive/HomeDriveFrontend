@@ -5,6 +5,7 @@ import { SideBarLogo } from '@/ui/components/sidebar/SIdeBarLogo';
 import { SideBarNavLinks } from '@/ui/components/sidebar/SideBarNavLinks/SideBarNavLinks';
 import { SettingsNavLink } from '@/ui/components/sidebar/SideBarFooter/SettingsNavLink';
 import { Avatar } from '@/ui/components/sidebar/SideBarFooter/Avatar';
+import { AppHeader } from '@/ui/components/AppHeader/AppHeader';
 
 export function Root() {
   // insert urls to create a socket connection to here
@@ -21,9 +22,12 @@ export function Root() {
             <Avatar />
           </div>
         </aside>
-        <main className="flex-1 overflow-auto bg-muted/30">
-          <Outlet />
-        </main>
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <AppHeader />
+          <main className="flex-1 overflow-auto bg-muted/30">
+            <Outlet />
+          </main>
+        </div>
       </div>
     </SocketProvider>
   );
