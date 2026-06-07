@@ -1,28 +1,4 @@
-import { Folder, Link2, FileText, Code2 } from 'lucide-react';
-
-type WorkspaceIcon = 'folder' | 'link' | 'document' | 'code';
-
-type Workspace = {
-  id: string;
-  name: string;
-  fileCount: number;
-  icon: WorkspaceIcon;
-  online: boolean;
-};
-
-const ICON_MAP: Record<WorkspaceIcon, React.ElementType> = {
-  folder: Folder,
-  link: Link2,
-  document: FileText,
-  code: Code2,
-};
-
-const WORKSPACES: Workspace[] = [
-  { id: '1', name: 'Personal Projects', fileCount: 48, icon: 'folder', online: true },
-  { id: '2', name: 'Family Drive', fileCount: 123, icon: 'link', online: true },
-  { id: '3', name: 'Work & Studies', fileCount: 76, icon: 'document', online: false },
-  { id: '4', name: 'Coding', fileCount: 210, icon: 'code', online: true },
-];
+import { ICON_MAP, WORKSPACES } from '@/consts/consts';
 
 export function WorkspacesSection() {
   return (

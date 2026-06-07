@@ -1,11 +1,5 @@
-import { FileText, Image, Video, Music } from 'lucide-react';
+import { MEDIA_TYPES } from '@/consts/consts';
 
-const MEDIA_TYPES = [
-  { label: 'Documents', icon: FileText, count: 124 },
-  { label: 'Photos', icon: Image, count: 856 },
-  { label: 'Videos', icon: Video, count: 34 },
-  { label: 'Audio', icon: Music, count: 12 },
-] as const;
 
 export function MediaTypesCard() {
   return (

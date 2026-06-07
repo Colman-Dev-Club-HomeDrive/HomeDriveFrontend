@@ -2,24 +2,19 @@ import { StorageCard } from '@/ui/components/StorageCard';
 import { MediaTypesCard } from '@/ui/components/MediaTypesCard';
 import { CreateNewCard } from '@/ui/components/CreateNewCard';
 import { WorkspacesSection } from '@/ui/components/WorkspacesSection';
+import { useSelector } from 'react-redux';
+import { selectUser } from '@/store/slices/user.slice';
+import { getGreeting } from '@/utils/getGreeting';
 
-// TODO: replace with real user from auth/store
-const USER_NAME = 'Tal';
-
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
-}
 
 export function Home() {
+  const { name } = useSelector(selectUser);
   return (
     <div className="mx-auto w-full max-w-7xl flex flex-col gap-6 px-0 py-8 min-h-full bg-background">
       {/* Greeting */}
       <div>
         <h1 className="text-2xl font-bold">
-          {getGreeting()}, {USER_NAME}
+          {getGreeting()}, {name}
         </h1>
         <p className="text-sm text-muted-foreground">Explore your files and workspaces</p>
       </div>
@@ -31,12 +26,8 @@ export function Home() {
           <StorageCard usedGb={65} totalGb={100} />
           <MediaTypesCard />
         </div>
-
-        {/* Right column */}
         <CreateNewCard />
       </div>
-
-      {/* Workspaces */}
       <WorkspacesSection />
     </div>
   );

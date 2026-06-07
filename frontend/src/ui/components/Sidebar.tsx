@@ -1,27 +1,13 @@
 import { NavLink } from 'react-router';
 import {
   Cloud,
-  Home,
-  Triangle,
-  Users,
-  Link2,
-  Star,
-  BarChart2,
-  Trash2,
   Settings,
 } from 'lucide-react';
 import { cn } from '@/shadcn/lib/utils';
 import type { User } from '@/types/user.type';
+import { NAV_ITEMS } from '@/consts/consts';
 
-const NAV = [
-  { to: '/', icon: Home, label: 'Home' },
-  { to: '/drive', icon: Triangle, label: 'My Drive' },
-  { to: '/workspaces', icon: Users, label: 'Workspaces' },
-  { to: '/shared', icon: Link2, label: 'Shared with Me' },
-  { to: '/starred', icon: Star, label: 'Starred' },
-  { to: '/stats', icon: BarChart2, label: 'Statistics' },
-  { to: '/trash', icon: Trash2, label: 'Trash' },
-] as const;
+
 
 type SidebarProps = {
   user?: User;
@@ -42,7 +28,7 @@ export function Sidebar({ user }: SidebarProps) {
 
       {/* Nav links */}
       <nav className="flex w-full flex-1 flex-col gap-1 px-2 py-2">
-        {NAV.map(({ to, icon: Icon, label }) => (
+        {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
