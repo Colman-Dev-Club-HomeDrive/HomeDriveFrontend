@@ -1,10 +1,7 @@
-import { FilePlus2, FolderPlus, Plus, Upload } from 'lucide-react';
+import { ACTIONS } from '@/consts/consts';
+import { Plus } from 'lucide-react';
 
-const ACTIONS = [
-  { label: 'New Document', icon: FilePlus2, shortcut: '⌘D' },
-  { label: 'New Folder', icon: FolderPlus, shortcut: '⌘F' },
-  { label: 'Upload Files', icon: Upload, shortcut: '⌘U' },
-] as const;
+
 
 export function CreateNewCard() {
   return (
