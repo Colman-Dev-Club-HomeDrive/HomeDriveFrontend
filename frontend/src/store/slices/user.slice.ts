@@ -7,7 +7,7 @@ type UserState = User & {
 
 const initialState: UserState = {
   id: crypto.randomUUID(),
-  name: 'Itay',
+  name: 'the king',
   notificationCount: 3,
 };
 
@@ -24,7 +24,7 @@ export const userSlice = createSlice({
     },
     resetUser: (state) => {
       state.id = crypto.randomUUID();
-      state.name = 'Itay';
+      state.name = 'the king';
     },
     setNotificationCount: (state, action: PayloadAction<number>) => {
       state.notificationCount = action.payload;
