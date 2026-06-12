@@ -1,5 +1,5 @@
 import type { Workspace, WorkspaceIcon } from '@/types/workspace.type';
-import { Home, Triangle, Users, Link2, Star, BarChart2, Trash2 , FilePlus2, FolderPlus, Upload,  Image, Video, Music,Folder, FileText, Code2} from 'lucide-react';
+import { Home, Triangle, Users, Link2, Star, BarChart2, Trash2, FolderPlus, Upload, Image, Video, Music, Folder, FileText, Code2 } from 'lucide-react';
 
 export const VITE_API_URL = import.meta.env.VITE_API_URL as string;
 export const POKE_API_URL = `https://pokeapi.co/api/v2`;
@@ -15,7 +15,6 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const ACTIONS = [
-  { label: 'New Document', icon: FilePlus2, shortcut: '⌘D' },
   { label: 'New Folder', icon: FolderPlus, shortcut: '⌘F' },
   { label: 'Upload Files', icon: Upload, shortcut: '⌘U' },
 ] as const;
