@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router';
+import { NavLink } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/shadcn/lib/utils';
 
