@@ -1,6 +1,6 @@
 import { SocketProvider } from '@/sockets/SocketProvider';
 import { useMemo } from 'react';
-import { Outlet } from 'react-router';
+import { Outlet } from 'react-router-dom';
 import { SideBarLogo } from '@/ui/components/sidebar/SIdeBarLogo';
 import { SideBarNavLinks } from '@/ui/components/sidebar/SideBarNavLinks/SideBarNavLinks';
 import { SettingsNavLink } from '@/ui/components/sidebar/SideBarFooter/SettingsNavLink';
