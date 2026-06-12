@@ -1,9 +1,14 @@
 import { Home } from '@/ui/pages/Home';
 import { NotFound } from '@/ui/pages/NotFound';
 import { Root } from '@/ui/Root';
+import { SignUp } from '@/ui/pages/SignUp';
 import { createBrowserRouter } from 'react-router';
 
 export const router = createBrowserRouter([
+  {
+    path: '/signup',
+    Component: SignUp
+  },
   {
     path: '/',
     Component: Root,
