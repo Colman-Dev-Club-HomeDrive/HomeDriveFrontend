@@ -6,6 +6,10 @@ import { createBrowserRouter } from 'react-router';
 
 export const router = createBrowserRouter([
   {
+    path: '/signin',
+    Component: SignUp
+  },
+  {
     path: '/signup',
     Component: SignUp
   },
