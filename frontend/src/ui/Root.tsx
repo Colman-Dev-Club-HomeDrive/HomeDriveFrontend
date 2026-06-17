@@ -6,8 +6,10 @@ import { SideBarNavLinks } from '@/ui/components/sidebar/SideBarNavLinks/SideBar
 import { SettingsNavLink } from '@/ui/components/sidebar/SideBarFooter/SettingsNavLink';
 import { Avatar } from '@/ui/components/sidebar/SideBarFooter/Avatar';
 import { AppHeader } from '@/ui/components/AppHeader/AppHeader';
+import { FileUploadProvider } from '@/hooks/useFileUpload';
+import { UploadProgressToast } from '@/ui/components/UploadProgressToast';
 
-export function Root() {
+function RootLayout() {
   // insert urls to create a socket connection to here
   const socketUrls = useMemo(() => [], []);
 
@@ -29,6 +31,15 @@ export function Root() {
           </main>
         </div>
       </div>
+      <UploadProgressToast />
     </SocketProvider>
+  );
+}
+
+export function Root() {
+  return (
+    <FileUploadProvider>
+      <RootLayout />
+    </FileUploadProvider>
   );
 }
