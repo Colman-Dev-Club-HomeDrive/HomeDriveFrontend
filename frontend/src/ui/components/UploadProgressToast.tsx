@@ -1,14 +1,8 @@
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { formatSize } from '@/utils/formatSize';
 import { FileText, Image, Music, Video, File, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
-
-function formatSize(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 function FileTypeIcon({ mimeType }: { mimeType: string }) {
   const cls = 'size-4 shrink-0';

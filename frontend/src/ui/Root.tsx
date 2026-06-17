@@ -6,28 +6,16 @@ import { SideBarNavLinks } from '@/ui/components/sidebar/SideBarNavLinks/SideBar
 import { SettingsNavLink } from '@/ui/components/sidebar/SideBarFooter/SettingsNavLink';
 import { Avatar } from '@/ui/components/sidebar/SideBarFooter/Avatar';
 import { AppHeader } from '@/ui/components/AppHeader/AppHeader';
-import { FileUploadProvider, useFileUpload } from '@/hooks/useFileUpload';
+import { FileUploadProvider } from '@/hooks/useFileUpload';
 import { UploadProgressToast } from '@/ui/components/UploadProgressToast';
-import { detectDropSource } from '@/utils/detectDropSource';
 
 function RootLayout() {
-  const { handleDragEnter, handleDragLeave, handleDrop } = useFileUpload();
   // insert urls to create a socket connection to here
   const socketUrls = useMemo(() => [], []);
 
   return (
     <SocketProvider urls={socketUrls}>
-      <div
-        className="flex h-screen overflow-hidden"
-        onDragEnter={(e) => { e.preventDefault(); handleDragEnter(); }}
-        onDragLeave={handleDragLeave}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault();
-          const source = detectDropSource(e.dataTransfer.items);
-          handleDrop(e.dataTransfer.files, source);
-        }}
-      >
+      <div className="flex h-screen overflow-hidden">
         <aside className="flex h-screen w-14 flex-col items-center border-r border-border bg-card transition-all duration-300 hover:w-52">
           <SideBarLogo />
           <SideBarNavLinks />

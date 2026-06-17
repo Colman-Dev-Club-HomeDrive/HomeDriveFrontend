@@ -1,7 +1,8 @@
 import { ACTIONS } from '@/consts/consts';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { useHotkey } from '@tanstack/react-hotkeys';
 import { FolderPlus, Plus } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 
 export function CreateNewCard() {
   const { addFiles, isDragging } = useFileUpload();
@@ -13,32 +14,22 @@ export function CreateNewCard() {
     if (label === 'New Folder') folderInputRef.current?.click();
   };
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const isMetaOrCtrl = event.metaKey || event.ctrlKey;
-      if (!isMetaOrCtrl) return;
+  const isTypingTarget = (target: EventTarget | null) =>
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    (target instanceof HTMLElement && target.isContentEditable);
 
-      const target = event.target as HTMLElement | null;
-      const isTypingTarget =
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target?.isContentEditable;
-      if (isTypingTarget) return;
+  useHotkey('Mod+U', (event) => {
+    if (isTypingTarget(event.target)) return;
+    event.preventDefault();
+    fileInputRef.current?.click();
+  });
 
-      const key = event.key.toLowerCase();
-      if (key === 'u') {
-        event.preventDefault();
-        fileInputRef.current?.click();
-      }
-      if (key === 'f') {
-        event.preventDefault();
-        folderInputRef.current?.click();
-      }
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  useHotkey('Mod+F', (event) => {
+    if (isTypingTarget(event.target)) return;
+    event.preventDefault();
+    folderInputRef.current?.click();
+  });
 
   return (
     <div
