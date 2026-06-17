@@ -6,10 +6,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/shadcn/components/ui/dropdown-menu';
-import type { ActionMenuItem, ActionMenuButtonProps } from '@/types/action-menu.type';
+import type { ActionMenuItem } from '@/types/action-menu.type';
 import { ACTION_MENU_DEFAULTS } from '@/consts/consts';
 
-export type { ActionMenuItem, ActionMenuButtonProps };
+export type { ActionMenuItem };
+
+export type ActionMenuButtonProps = {
+  items: ActionMenuItem[];
+  ariaLabel?: string;
+  align?: 'start' | 'center' | 'end';
+  className?: string;
+};
 
 export function ActionMenuButton({
   items,

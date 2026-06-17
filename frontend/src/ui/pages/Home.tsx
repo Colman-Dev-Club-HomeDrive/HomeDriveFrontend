@@ -1,7 +1,7 @@
 import { StorageCard } from '@/ui/components/StorageCard';
 import { MediaTypesCard } from '@/ui/components/MediaTypesCard';
 import { CreateNewCard } from '@/ui/components/CreateNewCard';
-import { WorkspacesSection } from '@/ui/components/WorkspacesSection';
+import { WorkspacesSection } from '@/ui/components/ActionMenu/WorkspacesSection';
 import { useSelector } from 'react-redux';
 import { selectUser } from '@/store/slices/user.slice';
 import { getGreeting } from '@/utils/getGreeting';

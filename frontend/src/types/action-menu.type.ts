@@ -9,13 +9,6 @@ export type ActionMenuItem = {
   destructive?: boolean;
 };
 
-export type ActionMenuButtonProps = {
-  items: ActionMenuItem[];
-  ariaLabel?: string;
-  align?: 'start' | 'center' | 'end';
-  className?: string;
-};
-
 export type WorkspaceMenuOptions = {
   onAdd: () => void;
   onArrange: () => void;
