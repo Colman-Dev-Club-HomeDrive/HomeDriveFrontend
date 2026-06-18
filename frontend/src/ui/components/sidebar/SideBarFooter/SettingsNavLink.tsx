@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router';
+import { NavLink } from 'react-router-dom';
 import { Settings } from 'lucide-react';
 import { cn } from '@/shadcn/lib/utils';
 

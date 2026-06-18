@@ -1,7 +1,7 @@
 // import { useSockets } from '@/sockets/useSockets';
 import { useAppSelector } from '@/store/hooks';
 // import { useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 
 export function NotFound() {
   const name = useAppSelector((store) => store.user.name);

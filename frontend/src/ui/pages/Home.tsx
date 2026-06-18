@@ -1,16 +1,32 @@
 import { StorageCard } from '@/ui/components/StorageCard';
 import { MediaTypesCard } from '@/ui/components/MediaTypesCard';
 import { CreateNewCard } from '@/ui/components/CreateNewCard';
-import { WorkspacesSection } from '@/ui/components/WorkspacesSection';
+import { WorkspacesSection } from '@/ui/components/ActionMenu/WorkspacesSection';
 import { useSelector } from 'react-redux';
 import { selectUser } from '@/store/slices/user.slice';
 import { getGreeting } from '@/utils/getGreeting';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { detectDropSource } from '@/utils/detectDropSource';
 
 
 export function Home() {
+  const { handleDragEnter, handleDragLeave, handleDrop } = useFileUpload();
   const { name } = useSelector(selectUser);
   return (
-    <div className="mx-auto w-full max-w-7xl flex flex-col gap-6 px-0 py-8 min-h-full bg-background">
+    <div
+      className="mx-auto w-full max-w-7xl flex min-h-full flex-col gap-6 bg-background px-0 py-8"
+      onDragEnter={(e) => {
+        e.preventDefault();
+        handleDragEnter();
+      }}
+      onDragLeave={handleDragLeave}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        const source = detectDropSource(e.dataTransfer.items);
+        handleDrop(e.dataTransfer.files, source);
+      }}
+    >
       {/* Greeting */}
       <div>
         <h1 className="text-2xl font-bold">
