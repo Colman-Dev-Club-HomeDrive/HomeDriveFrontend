@@ -3,9 +3,18 @@ import { Login } from '@/ui/pages/Login';
 import { NotFound } from '@/ui/pages/NotFound';
 import { WorkSpace } from '@/ui/pages/WorkSpace';
 import { Root } from '@/ui/Root';
+import { SignUp } from '@/ui/pages/SignUp';
 import { createBrowserRouter } from 'react-router-dom';
 
 export const router = createBrowserRouter([
+  {
+    path: '/signin',
+    Component: SignUp
+  },
+  {
+    path: '/signup',
+    Component: SignUp
+  },
   {
     path: '/login',
     Component: Login
