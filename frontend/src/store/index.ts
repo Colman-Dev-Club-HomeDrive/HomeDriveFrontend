@@ -17,6 +17,7 @@ export const store = configureStore({
     [workspacesApi.reducerPath]: workspacesApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(authApi.middleware, pokemonApi.middleware, usersApi.middleware),
     getDefaultMiddleware().concat(
       authApi.middleware,
       pokemonApi.middleware,
