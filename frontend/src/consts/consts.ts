@@ -27,14 +27,30 @@ export const MEDIA_TYPES = [
 ] as const;
 
 export const WORKSPACE_COLORS = [
-  '#60a5fa', // blue
-  '#34d399', // green
-  '#f87171', // red
-  '#fbbf24', // yellow
-  '#a78bfa', // purple
-  '#fb923c', // orange
-  '#94a3b8', // gray
-  '#f472b6', // pink
+  // Row 1
+  '#e11d48', // crimson
+  '#f43f5e', // rose
+  '#fb7185', // light rose
+  '#dc2626', // red
+  '#ea580c', // red-orange
+  '#f97316', // orange
+  '#f59e0b', // amber
+  '#eab308', // yellow
+  '#84cc16', // lime
+  '#22c55e', // green
+  '#10b981', // emerald
+  '#14b8a6', // teal
+  // Row 2
+  '#06b6d4', // cyan
+  '#3b82f6', // blue
+  '#6366f1', // indigo
+  '#8b5cf6', // violet
+  '#a855f7', // purple
+  '#d946ef', // fuchsia
+  '#ec4899', // pink
+  '#78716c', // stone
+  '#6b7280', // gray
+  '#94a3b8', // slate
 ];
 
 export const WORKSPACES: Workspace[] = [
