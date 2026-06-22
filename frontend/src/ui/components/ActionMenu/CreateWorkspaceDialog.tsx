@@ -76,6 +76,7 @@ export function CreateWorkspaceDialog({
             <Input
               id="ws-name"
               placeholder="e.g. Team Projects"
+              className="bg-white dark:bg-white/5"
               {...register('name')}
             />
             {errors.name ? (
@@ -90,7 +91,7 @@ export function CreateWorkspaceDialog({
               defaultValue="folder"
               onValueChange={(val) => setValue('icon', val as WorkspaceIcon)}
             >
-              <SelectTrigger id="ws-type">
+              <SelectTrigger id="ws-type" className="bg-white dark:bg-white/5">
                 <SelectValue placeholder="Select a type" />
               </SelectTrigger>
               <SelectContent>
@@ -130,6 +131,7 @@ export function CreateWorkspaceDialog({
             <Input
               id="ws-share"
               placeholder="Names or emails, comma-separated"
+              className="bg-white dark:bg-white/5"
               {...register('shareWith')}
             />
           </div>

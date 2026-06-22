@@ -1,15 +1,6 @@
-export type Workspace = {
-    id: string;
-    name: string;
-    fileCount: number;
-    icon: WorkspaceIcon;
-    color: string;
-    description?: string;
-    collaboration?: string;
-    pinned?: boolean;
-  };
-
-  export type WorkspaceIcon = 'folder' | 'link' | 'document' | 'code';
+// Workspace and WorkspaceIcon are the single source of truth — defined in the shared package
+import type { Workspace, WorkspaceIcon } from '@homedrive/types';
+export type { Workspace, WorkspaceIcon };
 
 export type CreateWorkspaceFormValues = {
   name: string;
