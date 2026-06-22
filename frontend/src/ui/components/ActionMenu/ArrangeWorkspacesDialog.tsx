@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Reorder, useDragControls } from 'motion/react';
 import { GripVertical } from 'lucide-react';
 import {
@@ -51,8 +51,12 @@ export function ArrangeWorkspacesDialog({
 }: ArrangeWorkspacesDialogProps) {
   const [list, setList] = useState<Workspace[]>(workspaces);
 
+  // Sync list with the latest workspaces every time the dialog opens
+  useEffect(() => {
+    if (open) setList(workspaces);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function handleOpen(isOpen: boolean) {
-    if (isOpen) setList(workspaces);
     onOpenChange(isOpen);
   }
 

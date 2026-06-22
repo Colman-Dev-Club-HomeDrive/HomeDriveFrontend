@@ -1,52 +1,65 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { WORKSPACES } from '@/consts/consts';
 import { useWorkspaceMenuItems } from '@/ui/components/ActionMenu/MenuItems';
-import type { Workspace } from '@/types/workspace.type';
+import {
+  useListWorkspacesQuery,
+  useCreateWorkspaceMutation,
+  useUpdateWorkspaceMutation,
+  useDeleteWorkspaceMutation,
+  useReorderWorkspacesMutation,
+} from '@/store/apis/workspaces.api';
+import type { CreateWorkspaceFormValues, EditWorkspaceFormValues, Workspace } from '@/types/workspace.type';
 
 export function useWorkspacesSection() {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>(WORKSPACES);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [arrangeOpen, setArrangeOpen] = useState(false);
   const [editWorkspace, setEditWorkspace] = useState<Workspace | null>(null);
   const navigate = useNavigate();
+
+  const { data: workspaces = [], isLoading, isError } = useListWorkspacesQuery();
+  const [createWorkspace] = useCreateWorkspaceMutation();
+  const [updateWorkspaceMutation] = useUpdateWorkspaceMutation();
+  const [deleteWorkspaceMutation] = useDeleteWorkspaceMutation();
+  const [reorderWorkspacesMutation] = useReorderWorkspacesMutation();
 
   const menuItems = useWorkspaceMenuItems({
     onAdd: () => setDialogOpen(true),
     onArrange: () => setArrangeOpen(true),
   });
 
-  function addWorkspace(values: { name: string; icon: Workspace['icon']; color: string }) {
-    setWorkspaces((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        name: values.name,
-        fileCount: 0,
-        icon: values.icon,
-        color: values.color,
-        pinned: false,
-      },
-    ]);
+  function addWorkspace(values: CreateWorkspaceFormValues) {
+    createWorkspace(values);
   }
 
-  function updateWorkspace(id: string, values: Partial<Workspace>) {
-    setWorkspaces((prev) => prev.map((ws) => (ws.id === id ? { ...ws, ...values } : ws)));
+  function updateWorkspace(id: string, values: Partial<EditWorkspaceFormValues>) {
+    updateWorkspaceMutation({ id, values });
   }
 
   function deleteWorkspace(id: string) {
-    setWorkspaces((prev) => prev.filter((ws) => ws.id !== id));
+    deleteWorkspaceMutation(id);
   }
 
   function togglePin(id: string) {
-    setWorkspaces((prev) =>
-      prev.map((ws) => (ws.id === id ? { ...ws, pinned: !ws.pinned } : ws))
-    );
+    const ws = workspaces.find((w) => w.id === id);
+    if (!ws) return;
+    const pinning = !ws.pinned;
+    updateWorkspaceMutation({
+      id,
+      values: {
+        pinned: pinning,
+        pinnedAt: pinning ? new Date().toISOString() : undefined,
+      },
+    });
+  }
+
+  function reorderWorkspaces(updated: Workspace[]) {
+    reorderWorkspacesMutation(updated.map((ws) => ws.id));
   }
 
   return {
     workspaces,
-    setWorkspaces,
+    isLoading,
+    isError,
     dialogOpen,
     setDialogOpen,
     arrangeOpen,
@@ -59,5 +72,6 @@ export function useWorkspacesSection() {
     updateWorkspace,
     deleteWorkspace,
     togglePin,
+    reorderWorkspaces,
   };
 }
