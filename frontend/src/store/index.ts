@@ -17,8 +17,12 @@ export const store = configureStore({
     [workspacesApi.reducerPath]: workspacesApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(authApi.middleware, pokemonApi.middleware, usersApi.middleware),
-    getDefaultMiddleware().concat(pokemonApi.middleware, usersApi.middleware, workspacesApi.middleware),
+    getDefaultMiddleware().concat(
+      authApi.middleware,
+      pokemonApi.middleware,
+      usersApi.middleware,
+      workspacesApi.middleware
+    ),
 });
 
 setupListeners(store.dispatch);

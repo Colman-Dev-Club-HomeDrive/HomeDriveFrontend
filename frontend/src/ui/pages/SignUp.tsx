@@ -3,10 +3,11 @@ import { Cloud } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '@/store/hooks';
 import { setUser } from '@/store/slices/user.slice';
+import { VITE_API_URL } from '@/consts/consts';
 
 type AuthMode = 'signin' | 'signup';
 
-const REGISTER_URL = 'http://localhost:3000/api/auth/register';
+const REGISTER_URL = `${VITE_API_URL}/auth/register`;
 
 type RegisterResponse = {
   token: string;
