@@ -1,17 +1,21 @@
+import { useState } from 'react';
 import { StorageCard } from '@/ui/components/StorageCard';
 import { MediaTypesCard } from '@/ui/components/MediaTypesCard';
 import { CreateNewCard } from '@/ui/components/CreateNewCard';
 import { WorkspacesSection } from '@/ui/components/ActionMenu/WorkspacesSection';
+import { FileBrowserModal } from '@/ui/components/FileBrowserModal';
 import { useSelector } from 'react-redux';
 import { selectUser } from '@/store/slices/user.slice';
 import { getGreeting } from '@/utils/getGreeting';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { detectDropSource } from '@/utils/detectDropSource';
+import { RecentFilesSection } from '@/ui/components/RecentFilesSection';
 
 
 export function Home() {
   const { handleDragEnter, handleDragLeave, handleDrop } = useFileUpload();
   const { name } = useSelector(selectUser);
+  const [fileBrowserOpen, setFileBrowserOpen] = useState(false);
   return (
     <div
       className="mx-auto w-full max-w-7xl flex min-h-full flex-col gap-6 bg-background px-0 py-8"
@@ -42,9 +46,15 @@ export function Home() {
           <StorageCard usedGb={65} totalGb={100} />
           <MediaTypesCard />
         </div>
-        <CreateNewCard />
+        <CreateNewCard
+          onIndexFile={() => setFileBrowserOpen(true)}
+          onIndexFolder={() => setFileBrowserOpen(true)}
+        />
       </div>
       <WorkspacesSection />
+      <RecentFilesSection />
+
+      <FileBrowserModal open={fileBrowserOpen} onOpenChange={setFileBrowserOpen} />
     </div>
   );
 }

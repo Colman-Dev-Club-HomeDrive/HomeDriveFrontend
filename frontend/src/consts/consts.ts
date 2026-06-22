@@ -6,7 +6,7 @@ export const POKE_API_URL = `https://pokeapi.co/api/v2`;
 
 export const NAV_ITEMS = [
   { to: '/', icon: Home, label: 'Home' },
-  { to: '/drive', icon: Triangle, label: 'My Drive' },
+  { to: '/mydrive', icon: Triangle, label: 'My Drive' },
   { to: '/workspaces', icon: Users, label: 'Workspaces' },
   { to: '/shared', icon: Link2, label: 'Shared with Me' },
   { to: '/starred', icon: Star, label: 'Starred' },
