@@ -97,6 +97,7 @@ export function EditWorkspaceDialog({
             <Input
               id="edit-ws-name"
               placeholder="e.g. Team Projects"
+              className="bg-white dark:bg-white/5"
               {...register('name')}
             />
             {errors.name ? (
@@ -113,6 +114,7 @@ export function EditWorkspaceDialog({
             <Input
               id="edit-ws-description"
               placeholder="What is this workspace for?"
+              className="bg-white dark:bg-white/5"
               {...register('description')}
             />
             {errors.description ? (
@@ -129,6 +131,7 @@ export function EditWorkspaceDialog({
             <Input
               id="edit-ws-collab"
               placeholder="Names or emails, comma-separated"
+              className="bg-white dark:bg-white/5"
               {...register('collaboration')}
             />
           </div>
