@@ -1,4 +1,8 @@
 export type LoginRequest = {
+  email: string;
+  password: string;
+};
+
 export type RegisterRequest = {
   name: string;
   email: string;
@@ -12,6 +16,11 @@ export type AuthUser = {
 };
 
 export type LoginResponse = {
+  success: boolean;
+  token: string;
+  user: AuthUser;
+};
+
 export type RegisterResponse = {
   success: boolean;
   token: string;
