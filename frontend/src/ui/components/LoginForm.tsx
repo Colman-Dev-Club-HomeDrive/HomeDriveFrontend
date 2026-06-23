@@ -2,29 +2,39 @@ import { useState } from 'react';
 import { Cloud } from 'lucide-react';
 
 export type LoginFormValues = {
-  userName: string;
+  email: string;
   password: string;
   rememberMe: boolean;
 };
 
 type LoginFormProps = {
-  onSubmit?: (values: LoginFormValues) => void;
+  onSubmit?: (values: LoginFormValues) => void | Promise<void>;
+  isSubmitting?: boolean;
+  errorMessage?: string;
+  validationMessage?: string;
+  onFieldChange?: () => void;
 };
 
-export function LoginForm({ onSubmit }: LoginFormProps) {
-  const [userName, setUserName] = useState('');
+export function LoginForm({
+  onSubmit,
+  isSubmitting = false,
+  errorMessage = '',
+  validationMessage = '',
+  onFieldChange,
+}: LoginFormProps) {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onSubmit?.({ userName, password, rememberMe });
+    void onSubmit?.({ email, password, rememberMe });
   };
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[url('/bg4.jpg')] bg-cover bg-center bg-no-repeat flex items-center justify-center text-white">
-      <div className="absolute inset-0 bg-slate-950/20" />
+      <div className="pointer-events-none absolute inset-0 bg-slate-950/20" />
       <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center justify-center px-6 py-12">
         <div className="mb-10 flex items-center justify-center gap-3">
           <Cloud className="h-16 w-16 text-white" />
@@ -38,10 +48,22 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
             <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">Login</h1>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-10 space-y-6">
+          <form onSubmit={handleSubmit} noValidate className="mt-10 space-y-6">
+            {validationMessage ? (
+              <p className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                {validationMessage}
+              </p>
+            ) : null}
+
+            {errorMessage ? (
+              <p className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                {errorMessage}
+              </p>
+            ) : null}
+
             <div className="space-y-4">
-              <label className="block text-sm font-medium text-white" htmlFor="userName">
-                User Name
+              <label className="block text-sm font-medium text-white" htmlFor="email">
+                Email
               </label>
               <div className="relative">
                 <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-blue-400">
@@ -57,12 +79,15 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
                   </svg>
                 </span>
                 <input
-                  id="userName"
-                  name="userName"
-                  type="text"
-                  value={userName}
-                  onChange={(event) => setUserName(event.target.value)}
-                  placeholder="User Name"
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => {
+                    setEmail(event.target.value);
+                    onFieldChange?.();
+                  }}
+                  placeholder="Email"
                   className="w-full rounded-2xl border border-white/10 bg-slate-950/40 px-14 py-4 text-white placeholder:text-slate-500 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-400/25"
                 />
               </div>
@@ -90,7 +115,10 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    onFieldChange?.();
+                  }}
                   placeholder="Password"
                   className="w-full rounded-2xl border border-white/10 bg-slate-950/40 px-14 py-4 pr-14 text-white placeholder:text-slate-500 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-400/25"
                 />
@@ -131,9 +159,10 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
 
             <button
               type="submit"
-              className="w-full rounded-2xl bg-gradient-to-r from-blue-500 via-blue-600 to-sky-500 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+              disabled={isSubmitting}
+              className="w-full rounded-2xl bg-gradient-to-r from-blue-500 via-blue-600 to-sky-500 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-blue-400/40 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Login
+              {isSubmitting ? 'Logging in...' : 'Login'}
             </button>
           </form>
         </div>
@@ -141,4 +170,3 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
     </div>
   );
 }
-
