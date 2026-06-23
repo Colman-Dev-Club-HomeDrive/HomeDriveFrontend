@@ -4,14 +4,31 @@ import { useHotkey } from '@tanstack/react-hotkeys';
 import { FolderPlus, Plus } from 'lucide-react';
 import { useRef } from 'react';
 
-export function CreateNewCard() {
+type CreateNewCardProps = {
+  onIndexFile?: () => void;
+  onIndexFolder?: () => void;
+};
+
+export function CreateNewCard({ onIndexFile, onIndexFolder }: CreateNewCardProps) {
   const { addFiles, isDragging } = useFileUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
   const handleActionClick = (label: string) => {
-    if (label === 'Upload Files') fileInputRef.current?.click();
-    if (label === 'New Folder') folderInputRef.current?.click();
+    if (label === 'Upload Files') {
+      if (onIndexFile) {
+        onIndexFile();
+      } else {
+        fileInputRef.current?.click();
+      }
+    }
+    if (label === 'New Folder') {
+      if (onIndexFolder) {
+        onIndexFolder();
+      } else {
+        folderInputRef.current?.click();
+      }
+    }
   };
 
   const isTypingTarget = (target: EventTarget | null) =>
@@ -22,13 +39,21 @@ export function CreateNewCard() {
   useHotkey('Mod+U', (event) => {
     if (isTypingTarget(event.target)) return;
     event.preventDefault();
-    fileInputRef.current?.click();
+    if (onIndexFile) {
+      onIndexFile();
+    } else {
+      fileInputRef.current?.click();
+    }
   });
 
   useHotkey('Mod+F', (event) => {
     if (isTypingTarget(event.target)) return;
     event.preventDefault();
-    folderInputRef.current?.click();
+    if (onIndexFolder) {
+      onIndexFolder();
+    } else {
+      folderInputRef.current?.click();
+    }
   });
 
   return (

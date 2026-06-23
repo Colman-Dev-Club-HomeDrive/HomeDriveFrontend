@@ -5,6 +5,7 @@ import { authApi } from './apis/auth.api';
 import { pokemonApi } from './apis/pokemon.api';
 import { usersApi } from './apis/users.api';
 import { workspacesApi } from './apis/workspaces.api';
+import { filesApi } from './apis/files.api';
 import { setupListeners } from '@reduxjs/toolkit/query/react';
 
 export const store = configureStore({
@@ -15,15 +16,18 @@ export const store = configureStore({
     [pokemonApi.reducerPath]: pokemonApi.reducer,
     [usersApi.reducerPath]: usersApi.reducer,
     [workspacesApi.reducerPath]: workspacesApi.reducer,
+    [filesApi.reducerPath]: filesApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(authApi.middleware, pokemonApi.middleware, usersApi.middleware),
+
     getDefaultMiddleware().concat(
-      authApi.middleware,
       pokemonApi.middleware,
+      authApi.middleware,
       usersApi.middleware,
-      workspacesApi.middleware
+      workspacesApi.middleware,
+      filesApi.middleware
     ),
+
 });
 
 setupListeners(store.dispatch);
