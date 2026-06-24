@@ -1,4 +1,5 @@
 import type { Workspace, WorkspaceIcon } from '@/types/workspace.type';
+import type { MediaType } from '@/types/file.type';
 import { Home, Triangle, Users, Link2, Star, BarChart2, Trash2, FolderPlus, Upload, Image, Video, Music, Folder, FileText, Code2 } from 'lucide-react';
 
 export const VITE_API_URL = import.meta.env.VITE_API_URL as string;
@@ -19,12 +20,12 @@ export const ACTIONS = [
   { label: 'Upload Files', icon: Upload, shortcut: '⌘U' },
 ] as const;
 
-export const MEDIA_TYPES = [
-  { label: 'Documents', icon: FileText, count: 124 },
-  { label: 'Photos', icon: Image, count: 856 },
-  { label: 'Videos', icon: Video, count: 34 },
-  { label: 'Audio', icon: Music, count: 12 },
-] as const;
+export const MEDIA_TYPES: Array<{ key: MediaType; label: string; icon: React.ElementType }> = [
+  { key: 'documents', label: 'Documents', icon: FileText },
+  { key: 'photos', label: 'Photos', icon: Image },
+  { key: 'videos', label: 'Videos', icon: Video },
+  { key: 'audio', label: 'Audio', icon: Music },
+];
 
 export const WORKSPACE_COLORS = [
   // Row 1
