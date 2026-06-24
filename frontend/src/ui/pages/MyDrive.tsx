@@ -3,10 +3,37 @@ import { FolderSearch } from 'lucide-react';
 import { FileBrowserModal } from '@/ui/components/FileBrowserModal';
 import { FileItem } from '@/ui/components/FileItem';
 import { useListFilesQuery } from '@/store/apis/files.api';
+import type { MediaType } from '@/types/file.type';
+import { useSearchParams } from 'react-router-dom';
+
+const MEDIA_TYPE_LABELS: Record<MediaType, string> = {
+  documents: 'Documents',
+  photos: 'Photos',
+  videos: 'Videos',
+  audio: 'Audio',
+};
+
+function parseMediaType(value: string | null): MediaType | undefined {
+  if (!value) return undefined;
+  if (value === 'documents' || value === 'photos' || value === 'videos' || value === 'audio') {
+    return value;
+  }
+  return undefined;
+}
 
 export function MyDrive() {
   const [fileBrowserOpen, setFileBrowserOpen] = useState(false);
-  const { data: files, isLoading, isError } = useListFilesQuery(undefined);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const mediaType = parseMediaType(searchParams.get('mediaType'));
+  const { data: files, isLoading, isError } = useListFilesQuery(
+    mediaType ? { mediaType } : undefined
+  );
+
+  const clearMediaFilter = () => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('mediaType');
+    setSearchParams(nextParams);
+  };
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-6 px-6 py-8">
@@ -18,6 +45,18 @@ export function MyDrive() {
               ? 'Loading...'
               : `${files?.length ?? 0} file${(files?.length ?? 0) !== 1 ? 's' : ''} indexed`}
           </p>
+          {mediaType && (
+            <div className="mt-1 flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">Filter: {MEDIA_TYPE_LABELS[mediaType]}</p>
+              <button
+                type="button"
+                className="text-xs font-medium text-primary transition-colors hover:text-primary/80"
+                onClick={clearMediaFilter}
+              >
+                Clear
+              </button>
+            </div>
+          )}
         </div>
         <button
           className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"

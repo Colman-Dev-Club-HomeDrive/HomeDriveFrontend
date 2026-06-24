@@ -1,6 +1,14 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { VITE_API_URL } from '@/consts/consts';
-import type { BrowseDirectoryResult, IndexedFile } from '@/types/file.type';
+import type { BrowseDirectoryResult, IndexedFile, MediaType, MediaTypeCount } from '@/types/file.type';
+
+type ListFilesArgs =
+  | string
+  | {
+      workspaceId?: string;
+      mediaType?: MediaType;
+    }
+  | undefined;
 
 export const filesApi = createApi({
   reducerPath: 'filesApi',
@@ -14,9 +22,24 @@ export const filesApi = createApi({
       }),
     }),
 
-    listFiles: builder.query<IndexedFile[], string | undefined>({
-      query: (workspaceId) => ({
+    listFiles: builder.query<IndexedFile[], ListFilesArgs>({
+      query: (args) => {
+        const params =
+          typeof args === 'string'
+            ? { workspaceId: args }
+            : Object.fromEntries(Object.entries(args ?? {}).filter(([, v]) => v !== undefined));
+
+        return {
         url: '/files',
+        params,
+      };
+      },
+      providesTags: ['File'],
+    }),
+
+    getMediaTypeCounts: builder.query<MediaTypeCount[], string | undefined>({
+      query: (workspaceId) => ({
+        url: '/files/media-types',
         params: workspaceId ? { workspaceId } : {},
       }),
       providesTags: ['File'],
@@ -54,6 +77,7 @@ export const filesApi = createApi({
 export const {
   useBrowseDirectoryQuery,
   useListFilesQuery,
+  useGetMediaTypeCountsQuery,
   useIndexFileMutation,
   useDeleteFileMutation,
   useOpenFileMutation,
