@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Cloud } from 'lucide-react';
 
 export type LoginFormValues = {
@@ -37,7 +38,7 @@ export function LoginForm({
       <div className="pointer-events-none absolute inset-0 bg-slate-950/20" />
       <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center justify-center px-6 py-12">
         <div className="mb-10 flex items-center justify-center gap-3">
-          <Cloud className="h-16 w-16 text-white" />
+          <Cloud className="h-20 w-20 text-white" />
           <h1 className="text-center text-5xl font-bold uppercase tracking-[0.35em] text-white sm:text-6xl">
             HOME CLOUD
           </h1>
@@ -164,6 +165,16 @@ export function LoginForm({
             >
               {isSubmitting ? 'Logging in...' : 'Login'}
             </button>
+
+            <p className="text-center text-sm text-slate-300">
+              Don&apos;t have an account?{' '}
+              <Link
+                to="/signup"
+                className="font-semibold text-blue-400 underline-offset-4 transition hover:text-blue-300 hover:underline"
+              >
+                Create account
+              </Link>
+            </p>
           </form>
         </div>
       </div>

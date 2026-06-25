@@ -1,26 +1,13 @@
 import { useState } from 'react';
 import { Cloud } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '@/store/hooks';
-import { setUser } from '@/store/slices/user.slice';
-import { VITE_API_URL } from '@/consts/consts';
+import { useRegisterMutation } from '@/store/apis/auth.api';
 
 type AuthMode = 'signin' | 'signup';
 
-const REGISTER_URL = `${VITE_API_URL}/auth/register`;
-
-type RegisterResponse = {
-  token: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
-};
-
 export function SignUp() {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const [register, { isLoading: isRegistering }] = useRegisterMutation();
 
   const [mode, setMode] = useState<AuthMode>('signup');
   const [name, setName] = useState('');
@@ -29,8 +16,6 @@ export function SignUp() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -70,42 +55,27 @@ export function SignUp() {
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
-      const response = await fetch(REGISTER_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-          email: email.trim(),
-          password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        const message =
-          typeof data?.message === 'string' ? data.message : 'Registration failed. Please try again.';
-        setErrorMessage(message);
-        return;
-      }
-
-      const result = data as RegisterResponse;
-
-      localStorage.setItem('token', result.token);
-      localStorage.setItem('user', JSON.stringify(result.user));
-      dispatch(setUser({ id: result.user.id, name: result.user.name }));
+      await register({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+      }).unwrap();
 
       setSuccessMessage('Account created successfully! Redirecting...');
-      navigate('/');
-    } catch {
-      setErrorMessage('Could not reach the server. Make sure the backend is running.');
-    } finally {
-      setIsSubmitting(false);
+      navigate('/home');
+    } catch (error) {
+      const message =
+        typeof error === 'object' &&
+        error !== null &&
+        'data' in error &&
+        typeof error.data === 'object' &&
+        error.data !== null &&
+        'message' in error.data &&
+        typeof error.data.message === 'string'
+          ? error.data.message
+          : 'Could not reach the server. Make sure the backend is running.';
+      setErrorMessage(message);
     }
   };
 
@@ -120,9 +90,9 @@ export function SignUp() {
       <div className="pointer-events-none absolute inset-0 bg-slate-950/10" />
       <div className="relative z-10 w-full max-w-xl px-6 py-12">
         <div className="mb-10 flex items-center justify-center gap-3 text-center">
-          <Cloud className="h-16 w-16 text-foreground" />
+          <Cloud className="h-20 w-20 text-foreground" />
           <h1 className="text-4xl font-bold uppercase tracking-[0.35em] text-foreground sm:text-5xl whitespace-nowrap">
-            HOME DRIVE
+            HOME CLOUD
           </h1>
         </div>
 
@@ -263,10 +233,10 @@ export function SignUp() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isRegistering}
               className="w-full max-w-sm rounded-2xl bg-primary px-5 py-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {isSubmitting ? 'Creating account...' : submitLabel}
+              {isRegistering ? 'Creating account...' : submitLabel}
             </button>
 
             <button

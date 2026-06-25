@@ -1,7 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { useLoginMutation } from '@/store/apis/auth.api';
-import { useAppDispatch } from '@/store/hooks';
-import { setUser } from '@/store/slices/user.slice';
 import { LoginForm, type LoginFormValues } from '../components/LoginForm';
 import type { ApiErrorResponse } from '@/types/auth.type';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
@@ -18,7 +16,6 @@ const getLoginErrorMessage = (error: FetchBaseQueryError): string => {
 
 export function Login() {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const [login, { isLoading }] = useLoginMutation();
   const [errorMessage, setErrorMessage] = useState('');
   const [validationMessage, setValidationMessage] = useState('');
@@ -38,15 +35,12 @@ export function Login() {
     }
 
     try {
-      const result = await login({
+      await login({
         email: values.email.trim(),
         password: values.password,
       }).unwrap();
 
-      localStorage.setItem('token', result.token);
-      localStorage.setItem('user', JSON.stringify(result.user));
-      dispatch(setUser({ id: result.user.id, name: result.user.name }));
-      navigate('/');
+      navigate('/home');
     } catch (error) {
       if (typeof error === 'object' && error !== null && 'status' in error) {
         setErrorMessage(getLoginErrorMessage(error as FetchBaseQueryError));

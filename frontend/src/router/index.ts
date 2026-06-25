@@ -9,6 +9,10 @@ import { createBrowserRouter } from 'react-router-dom';
 
 export const router = createBrowserRouter([
   {
+    path: '/',
+    Component: Login
+  },
+  {
     path: '/signin',
     Component: SignUp
   },
@@ -21,10 +25,9 @@ export const router = createBrowserRouter([
     Component: Login
   },
   {
-    path: '/',
     Component: Root,
     children: [
-      { index: true, Component: Home },
+      { path: '/home', Component: Home },
       { path: '/mydrive', Component: MyDrive },
       { path: '/workspaces', Component: WorkSpace },
     ]

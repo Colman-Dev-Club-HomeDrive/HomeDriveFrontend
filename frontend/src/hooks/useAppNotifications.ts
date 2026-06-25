@@ -5,12 +5,6 @@ import { useAppSelector } from '@/store/hooks';
 import { selectUser } from '@/store/slices/user.slice';
 import { useTransferNotifications } from '@/hooks/useTransferNotifications';
 
-type StoredAuthUser = {
-  id?: string;
-  email?: string;
-  name?: string;
-};
-
 type BaseNotification = {
   id: string;
   title: string;
@@ -30,17 +24,6 @@ export type DownloadRequestNotification = BaseNotification & {
 
 export type AppNotification = SharedAccessNotification | DownloadRequestNotification;
 
-function readStoredAuthUser(): StoredAuthUser | null {
-  const raw = localStorage.getItem('user');
-  if (!raw) return null;
-
-  try {
-    return JSON.parse(raw) as StoredAuthUser;
-  } catch {
-    return null;
-  }
-}
-
 function normalize(value: string): string {
   return value.trim().toLowerCase();
 }
@@ -54,9 +37,9 @@ function parseCollaborators(value?: string): string[] {
     .filter(Boolean);
 }
 
-function buildCurrentUserMarkers(userId: string, userName: string, storedUser: StoredAuthUser | null) {
+function buildCurrentUserMarkers(userId: string, userName: string, userEmail: string) {
   return new Set(
-    [userId, userName, storedUser?.id, storedUser?.email, storedUser?.name]
+    [userId, userName, userEmail]
       .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
       .map(normalize),
   );
@@ -70,14 +53,13 @@ function isSharedWithCurrentUser(collaboration: string | undefined, currentUserM
 
 export function useAppNotifications() {
   const user = useAppSelector(selectUser);
-  const storedUser = readStoredAuthUser();
   const { data: workspaces = [] } = useListWorkspacesQuery();
   const { data: files = [] } = useListFilesQuery(undefined);
   const { permissionPrompts, approvePrompt, denyPrompt } = useTransferNotifications();
 
   const currentUserMarkers = useMemo(
-    () => buildCurrentUserMarkers(user.id, user.name, storedUser),
-    [storedUser, user.id, user.name],
+    () => buildCurrentUserMarkers(user.id, user.name, user.email),
+    [user.email, user.id, user.name],
   );
 
   const sharedAccessNotifications = useMemo<SharedAccessNotification[]>(() => {

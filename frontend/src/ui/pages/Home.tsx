@@ -4,7 +4,8 @@ import { MediaTypesCard } from '@/ui/components/MediaTypesCard';
 import { CreateNewCard } from '@/ui/components/CreateNewCard';
 import { WorkspacesSection } from '@/ui/components/ActionMenu/WorkspacesSection';
 import { FileBrowserModal } from '@/ui/components/FileBrowserModal';
-import { useSelector } from 'react-redux';
+import { useAppSelector } from '@/store/hooks';
+import { useGetMeQuery } from '@/store/apis/auth.api';
 import { selectUser } from '@/store/slices/user.slice';
 import { getGreeting } from '@/utils/getGreeting';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -14,7 +15,9 @@ import { RecentFilesSection } from '@/ui/components/RecentFilesSection';
 
 export function Home() {
   const { handleDragEnter, handleDragLeave, handleDrop } = useFileUpload();
-  const { name } = useSelector(selectUser);
+  const { data: meData } = useGetMeQuery();
+  const { name: storeName } = useAppSelector(selectUser);
+  const userName = meData?.user?.name || storeName;
   const [fileBrowserOpen, setFileBrowserOpen] = useState(false);
   return (
     <div
@@ -34,7 +37,8 @@ export function Home() {
       {/* Greeting */}
       <div>
         <h1 className="text-2xl font-bold">
-          {getGreeting()}, {name}
+          {getGreeting()}
+          {userName ? `, ${userName}` : ''}
         </h1>
         <p className="text-sm text-muted-foreground">Explore your files and workspaces</p>
       </div>

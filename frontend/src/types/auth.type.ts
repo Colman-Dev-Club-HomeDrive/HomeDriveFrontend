@@ -15,15 +15,17 @@ export type AuthUser = {
   email: string;
 };
 
+export type MeResponse = {
+  user: AuthUser;
+};
+
 export type LoginResponse = {
-  success: boolean;
-  token: string;
+  success?: boolean;
   user: AuthUser;
 };
 
 export type RegisterResponse = {
-  success: boolean;
-  token: string;
+  success?: boolean;
   user: AuthUser;
 };
 

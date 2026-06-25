@@ -56,9 +56,8 @@ export function FileItem({ file }: FileItemProps) {
   async function handleDownloadAction() {
     try {
       setIsDownloading(true);
-      const token = localStorage.getItem('token');
       const response = await fetch(`${VITE_API_URL || '/api'}/files/${fileId}/download`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Download failed');
       const blob = await response.blob();
