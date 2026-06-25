@@ -3,6 +3,7 @@ import type { MediaType } from '@/types/file.type';
 import { Home, Triangle, Users, Link2, Star, BarChart2, Trash2, FolderPlus, Upload, Image, Video, Music, Folder, FileText, Code2 } from 'lucide-react';
 
 export const VITE_API_URL = import.meta.env.VITE_API_URL as string;
+export const VITE_SOCKET_URL = import.meta.env.VITE_SOCKET_URL as string;
 export const POKE_API_URL = `https://pokeapi.co/api/v2`;
 
 export const NAV_ITEMS = [
@@ -55,10 +56,7 @@ export const WORKSPACE_COLORS = [
 ];
 
 export const WORKSPACES: Workspace[] = [
-  { id: '1', name: 'Personal Projects', fileCount: 48, icon: 'folder', color: '#60a5fa', pinned: true },
-  { id: '2', name: 'Family Drive', fileCount: 123, icon: 'link', color: '#34d399', pinned: false },
-  { id: '3', name: 'Work & Studies', fileCount: 76, icon: 'document', color: '#94a3b8', pinned: false },
-  { id: '4', name: 'Coding', fileCount: 210, icon: 'code', color: '#a78bfa', pinned: false },
+  
 ];
 
 export const ICON_MAP: Record<WorkspaceIcon, React.ElementType> = {

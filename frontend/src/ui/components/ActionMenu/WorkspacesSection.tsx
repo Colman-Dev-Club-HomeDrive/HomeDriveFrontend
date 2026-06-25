@@ -58,6 +58,7 @@ export function WorkspacesSection() {
                   workspace={workspace}
                   onTogglePin={togglePin}
                   onEdit={setEditWorkspace}
+                  onDownload={() => navigate('/workspaces')}
                 />
               ))}
           </div>

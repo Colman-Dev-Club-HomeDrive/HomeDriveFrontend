@@ -8,30 +8,33 @@ import { Avatar } from '@/ui/components/sidebar/SideBarFooter/Avatar';
 import { AppHeader } from '@/ui/components/AppHeader/AppHeader';
 import { FileUploadProvider } from '@/hooks/useFileUpload';
 import { UploadProgressToast } from '@/ui/components/UploadProgressToast';
+import { VITE_SOCKET_URL } from '@/consts/consts';
+import { TransferNotificationsProvider } from '@/hooks/useTransferNotifications';
 
 function RootLayout() {
-  // insert urls to create a socket connection to here
-  const socketUrls = useMemo(() => [], []);
+  const socketUrls = useMemo(() => (VITE_SOCKET_URL ? [VITE_SOCKET_URL] : []), []);
 
   return (
     <SocketProvider urls={socketUrls}>
-      <div className="flex h-screen overflow-hidden">
-        <aside className="flex h-screen w-14 flex-col items-center border-r border-border bg-card transition-all duration-300 hover:w-52">
-          <SideBarLogo />
-          <SideBarNavLinks />
-          <div className="flex w-full flex-col gap-1 px-2 pb-4">
-            <SettingsNavLink />
-            <Avatar />
+      <TransferNotificationsProvider>
+        <div className="flex h-screen overflow-hidden">
+          <aside className="flex h-screen w-14 flex-col items-center border-r border-border bg-card transition-all duration-300 hover:w-52">
+            <SideBarLogo />
+            <SideBarNavLinks />
+            <div className="flex w-full flex-col gap-1 px-2 pb-4">
+              <SettingsNavLink />
+              <Avatar />
+            </div>
+          </aside>
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <AppHeader />
+            <main className="flex-1 overflow-auto bg-muted/30">
+              <Outlet />
+            </main>
           </div>
-        </aside>
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <AppHeader />
-          <main className="flex-1 overflow-auto bg-muted/30">
-            <Outlet />
-          </main>
         </div>
-      </div>
-      <UploadProgressToast />
+        <UploadProgressToast />
+      </TransferNotificationsProvider>
     </SocketProvider>
   );
 }

@@ -63,6 +63,13 @@ export const filesApi = createApi({
       query: (id) => ({ url: `/files/${id}/open`, method: 'POST' }),
     }),
 
+    downloadFile: builder.mutation<Blob, string>({
+      query: (id) => ({
+        url: `/files/${id}/download`,
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
+
     renameFile: builder.mutation<IndexedFile, { id: string; name: string }>({
       query: ({ id, name }) => ({
         url: `/files/${id}`,
@@ -81,5 +88,6 @@ export const {
   useIndexFileMutation,
   useDeleteFileMutation,
   useOpenFileMutation,
+  useDownloadFileMutation,
   useRenameFileMutation,
 } = filesApi;
