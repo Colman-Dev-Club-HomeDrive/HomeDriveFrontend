@@ -1,10 +1,10 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { VITE_API_URL } from '@/consts/consts';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithAuth } from './baseQuery';
 import type { CreateWorkspaceFormValues, EditWorkspaceFormValues, Workspace } from '@/types/workspace.type';
 
 export const workspacesApi = createApi({
   reducerPath: 'workspacesApi',
-  baseQuery: fetchBaseQuery({ baseUrl: VITE_API_URL }),
+  baseQuery: baseQueryWithAuth,
   tagTypes: ['Workspace'],
   endpoints: (builder) => ({
     listWorkspaces: builder.query<Workspace[], void>({

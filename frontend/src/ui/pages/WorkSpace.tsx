@@ -48,6 +48,7 @@ export function WorkSpace() {
                 workspace={workspace}
                 onTogglePin={togglePin}
                 onEdit={setEditWorkspace}
+                onDownload={() => {}}
               />
             ))}
       </div>

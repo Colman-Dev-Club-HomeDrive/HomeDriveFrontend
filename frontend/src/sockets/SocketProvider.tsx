@@ -1,7 +1,7 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
-import { io, type Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 import { SocketsContext, SocketStatusesContext } from '@/sockets/socketContext';
-import type { SocketStatus } from '@/sockets/types';
+import type { AppSocket, SocketStatus } from '@/sockets/types';
 
 type SocketProviderProps = {
   children: React.ReactNode;
@@ -9,13 +9,14 @@ type SocketProviderProps = {
 };
 
 export function SocketProvider({ urls, children }: SocketProviderProps) {
-  const [sockets, setSockets] = useState<Record<string, Socket>>({});
+  const [sockets, setSockets] = useState<Record<string, AppSocket>>({});
   const [statuses, setStatuses] = useState<Record<string, SocketStatus>>({});
-  const createdRef = useRef<Record<string, Socket>>({});
+  const createdRef = useRef<Record<string, AppSocket>>({});
 
   const initSockets = useEffectEvent(() => {
-    const created: Record<string, Socket> = {};
+    const created: Record<string, AppSocket> = {};
     const initialStatus: Record<string, SocketStatus> = {};
+    const token = localStorage.getItem('token');
 
     for (const url of urls) {
       created[url] = io(url, {
@@ -26,7 +27,8 @@ export function SocketProvider({ urls, children }: SocketProviderProps) {
         autoConnect: false,
         timeout: 10_000,
         reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000
+        reconnectionDelayMax: 5000,
+        auth: token ? { token } : undefined,
       });
       initialStatus[url] = 'disconnected';
     }

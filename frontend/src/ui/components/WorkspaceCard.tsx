@@ -1,4 +1,4 @@
-import { Pencil, Pin, PinOff } from 'lucide-react';
+import { Download, Pencil, Pin, PinOff } from 'lucide-react';
 import { ICON_MAP } from '@/consts/consts';
 import type { Workspace } from '@/types/workspace.type';
 
@@ -6,9 +6,10 @@ export type WorkspaceCardProps = {
   workspace: Workspace;
   onTogglePin: (id: string) => void;
   onEdit: (workspace: Workspace) => void;
+  onDownload: (workspace: Workspace) => void;
 };
 
-export function WorkspaceCard({ workspace, onTogglePin, onEdit }: WorkspaceCardProps) {
+export function WorkspaceCard({ workspace, onTogglePin, onEdit, onDownload }: WorkspaceCardProps) {
   const { id, name, fileCount, icon, color, pinned } = workspace;
   const Icon = ICON_MAP[icon];
 
@@ -36,6 +37,15 @@ export function WorkspaceCard({ workspace, onTogglePin, onEdit }: WorkspaceCardP
         <p className="text-sm font-medium">{name}</p>
         <p className="text-xs text-muted-foreground">{fileCount} files</p>
       </div>
+
+      {/* Download */}
+      <button
+        className="absolute bottom-3 right-11 rounded-lg p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+        onClick={(e) => { e.stopPropagation(); onDownload(workspace); }}
+        aria-label={`Download ${name}`}
+      >
+        <Download className="size-3.5" />
+      </button>
 
       {/* Edit */}
       <button

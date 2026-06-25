@@ -26,7 +26,7 @@ export function RecentFilesSection() {
 
       {isError && <p className="text-xs text-destructive">Failed to load recent files.</p>}
 
-      <div className="rounded-2xl border bg-card/40 p-2">
+      <div className="rounded-2xl border border-slate-200 bg-white p-2 text-slate-900 shadow-sm">
         {isLoading && (
           <div className="space-y-2 p-1">
             {Array.from({ length: 4 }).map((_, i) => (

@@ -35,3 +35,74 @@ export type UpdateWorkspaceDto = {
   pinned?: boolean;
   pinnedAt?: string | null;
 };
+
+export type TransferRequestDto = {
+  requestId: string;
+  fileId: string;
+  fileName: string;
+  ownerUserId?: string;
+  ownerEmail?: string;
+  requesterUserId?: string;
+  requesterEmail?: string;
+  requesterName?: string;
+  requestedAt?: string;
+};
+
+export type TransferPermissionResponseDto = {
+  requestId: string;
+  transferId?: string;
+  approved: boolean;
+  reason?: string;
+  ownerUserId?: string;
+  ownerEmail?: string;
+};
+
+export type TransferStartDto = {
+  transferId: string;
+  requestId: string;
+  fileId: string;
+  fileName: string;
+  totalSize: number;
+  chunkSize: number;
+  ownerUserId: string;
+  requesterUserId: string;
+};
+
+export type TransferChunkPayload = ArrayBuffer | Uint8Array;
+
+export type TransferChunkDto = {
+  transferId: string;
+  sequence: number;
+  isLast: boolean;
+  payload: TransferChunkPayload;
+};
+
+export type TransferDurableAckDto = {
+  transferId: string;
+  sequence: number;
+  durableBytesWritten: number;
+};
+
+export type TransferResumeSyncDto = {
+  transferId: string;
+  lastDurableSequence: number;
+  durableBytesWritten: number;
+};
+
+export type TransferCompleteDto = {
+  transferId: string;
+  totalDurableBytesWritten?: number;
+  fileHash?: string;
+};
+
+export type TransferCancelDto = {
+  transferId: string;
+  reason?: string;
+};
+
+export type TransferErrorDto = {
+  transferId?: string;
+  requestId?: string;
+  code: string;
+  message: string;
+};

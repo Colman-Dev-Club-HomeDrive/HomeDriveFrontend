@@ -23,6 +23,7 @@ export interface IndexedFile {
   isDirectory: boolean;
   workspaceId?: string;
   ownerId: string;
+  collaboration?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { VITE_API_URL } from '@/consts/consts';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithAuth } from './baseQuery';
 
 type ApiUser = {
   _id: string;
@@ -12,7 +12,7 @@ type ApiUser = {
 
 export const usersApi = createApi({
   reducerPath: 'usersApi',
-  baseQuery: fetchBaseQuery({ baseUrl: VITE_API_URL }),
+  baseQuery: baseQueryWithAuth,
   endpoints: (builder) => ({
     listUsers: builder.query<ApiUser[], void>({
       query: () => '/users',
