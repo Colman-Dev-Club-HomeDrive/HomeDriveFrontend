@@ -118,6 +118,15 @@ export function TransferNotificationsProvider({ children }: { children: ReactNod
 
   const [isToastOpen, setToastOpen] = useState(false);
   const [completedTransfers, setCompletedTransfers] = useState<CompletedTransferSession[]>([]);
+
+  // Auto-open the Transfer Center toast whenever a new permission prompt arrives
+  const prevPromptCountRef = useRef(0);
+  useEffect(() => {
+    if (permissionPrompts.length > prevPromptCountRef.current) {
+      setToastOpen(true);
+    }
+    prevPromptCountRef.current = permissionPrompts.length;
+  }, [permissionPrompts.length]);
   const ackWaitersRef = useRef<
     Map<
       string,

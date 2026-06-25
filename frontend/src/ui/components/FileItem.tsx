@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { File, FileText, Image, Video, Music, Folder, Trash2, Loader2, Pencil, MoreHorizontal, Download } from 'lucide-react';
-import { useDeleteFileMutation, useDownloadFileMutation, useOpenFileMutation, useRenameFileMutation } from '@/store/apis/files.api';
+import { useDeleteFileMutation, useOpenFileMutation, useRenameFileMutation } from '@/store/apis/files.api';
+import { VITE_API_URL } from '@/consts/consts';
 import { RenameFileDialog } from '@/ui/components/RenameFileDialog';
 import { formatSize } from '@/utils/formatSize';
 import type { IndexedFile } from '@/types/file.type';
-import { useAppSelector } from '@/store/hooks';
-import { selectUser } from '@/store/slices/user.slice';
-import { useTransferNotifications } from '../../hooks/useTransferNotifications';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,9 +15,6 @@ import {
 type FileItemProps = {
   file: IndexedFile;
 };
-
-const OBJECT_ID_REGEX = /^[a-f\d]{24}$/i;
-const DEV_FALLBACK_OWNER_ID = '6854abcd1234567890abcdef';
 
 function getMimeIcon(file: IndexedFile) {
   if (file.isDirectory) return Folder;
@@ -34,7 +29,7 @@ function getMimeIcon(file: IndexedFile) {
 export function FileItem({ file }: FileItemProps) {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [openFile, { isLoading: isOpening }] = useOpenFileMutation();
-  const [downloadFile, { isLoading: isDownloading }] = useDownloadFileMutation();
+  const [isDownloading, setIsDownloading] = useState(false);
   const [deleteFile, { isLoading: isDeleting }] = useDeleteFileMutation();
   const [renameFile, { isLoading: isRenaming }] = useRenameFileMutation();
   const fileId = file.id || file._id;
@@ -59,13 +54,25 @@ export function FileItem({ file }: FileItemProps) {
   }
 
   async function handleDownloadAction() {
-    const blob = await downloadFile(fileId).unwrap();
-    const objectUrl = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = objectUrl;
-    anchor.download = file.name;
-    anchor.click();
-    URL.revokeObjectURL(objectUrl);
+    try {
+      setIsDownloading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${VITE_API_URL || '/api'}/files/${fileId}/download`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!response.ok) throw new Error('Download failed');
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = file.name;
+      anchor.click();
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error('❌ Failed to download file:', error);
+    } finally {
+      setIsDownloading(false);
+    }
   }
 
   return (

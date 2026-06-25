@@ -1,14 +1,11 @@
 import type { User } from '@/types/user.type';
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-type UserState = User & {
-  notificationCount: number;
-};
+type UserState = User;
 
 const initialState: UserState = {
   id: crypto.randomUUID(),
   name: 'the king',
-  notificationCount: 3,
 };
 
 export const userSlice = createSlice({
@@ -26,16 +23,11 @@ export const userSlice = createSlice({
       state.id = crypto.randomUUID();
       state.name = 'the king';
     },
-    setNotificationCount: (state, action: PayloadAction<number>) => {
-      state.notificationCount = action.payload;
-    },
   }
 });
 
-export const { setUser, updateUserName, resetUser, setNotificationCount } = userSlice.actions;
+export const { setUser, updateUserName, resetUser } = userSlice.actions;
 
 export const selectUser = (state: { user: UserState }) => state.user;
-export const selectNotificationCount = (state: { user: UserState }) => state.user.notificationCount;
-
 
 export default userSlice.reducer;

@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { VITE_API_URL } from '@/consts/consts';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithAuth } from './baseQuery';
 import type { BrowseDirectoryResult, IndexedFile, MediaType, MediaTypeCount } from '@/types/file.type';
 
 type ListFilesArgs =
@@ -12,7 +12,7 @@ type ListFilesArgs =
 
 export const filesApi = createApi({
   reducerPath: 'filesApi',
-  baseQuery: fetchBaseQuery({ baseUrl: VITE_API_URL }),
+  baseQuery: baseQueryWithAuth,
   tagTypes: ['File'],
   endpoints: (builder) => ({
     browseDirectory: builder.query<BrowseDirectoryResult, string | undefined>({
@@ -45,7 +45,7 @@ export const filesApi = createApi({
       providesTags: ['File'],
     }),
 
-    indexFile: builder.mutation<IndexedFile, { path: string; workspaceId?: string }>({
+    indexFile: builder.mutation<IndexedFile, { path: string; workspaceId?: string; shareWith?: string }>({
       query: (body) => ({ 
         url: '/files', 
         method: 'POST', 
@@ -61,13 +61,6 @@ export const filesApi = createApi({
 
     openFile: builder.mutation<{ message: string }, string>({
       query: (id) => ({ url: `/files/${id}/open`, method: 'POST' }),
-    }),
-
-    downloadFile: builder.mutation<Blob, string>({
-      query: (id) => ({
-        url: `/files/${id}/download`,
-        responseHandler: (response) => response.blob(),
-      }),
     }),
 
     renameFile: builder.mutation<IndexedFile, { id: string; name: string }>({
@@ -88,6 +81,5 @@ export const {
   useIndexFileMutation,
   useDeleteFileMutation,
   useOpenFileMutation,
-  useDownloadFileMutation,
   useRenameFileMutation,
 } = filesApi;
