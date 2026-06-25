@@ -39,27 +39,6 @@ type TransferNotificationsContextValue = {
 
 const TransferNotificationsContext = createContext<TransferNotificationsContextValue | null>(null);
 
-type StoredAuthUser = {
-  id: string;
-  email?: string;
-  name?: string;
-};
-
-function readStoredAuthUser(): StoredAuthUser | null {
-  const raw = localStorage.getItem('user');
-  if (!raw) return null;
-
-  try {
-    return JSON.parse(raw) as StoredAuthUser;
-  } catch (_error) {
-    return null;
-  }
-}
-
-function getCurrentUserId(userId: string, storedUser: StoredAuthUser | null): string {
-  return storedUser?.id ?? userId;
-}
-
 function toUint8Array(payload: TransferChunkDto['payload']): Uint8Array {
   if (payload instanceof Uint8Array) {
     return payload;
@@ -93,9 +72,10 @@ function pickFileFromDevice(acceptFileName?: string): Promise<File | null> {
 
 export function TransferNotificationsProvider({ children }: { children: ReactNode }) {
   const user = useAppSelector(selectUser);
-  const storedUser = readStoredAuthUser();
   const socketUrl = VITE_SOCKET_URL ?? '';
-  const currentUserId = getCurrentUserId(user.id, storedUser);
+  const currentUserId = user.id || '';
+  const requesterEmail = user.email || undefined;
+  const requesterName = user.name || undefined;
 
   const {
     socket,
@@ -275,7 +255,7 @@ export function TransferNotificationsProvider({ children }: { children: ReactNod
 
   const requestFileFromOwner = useCallback(
     (file: RequestableFile) => {
-      if (!socketUrl) return;
+      if (!socketUrl || !currentUserId) return;
 
       requestFile({
         requestId: crypto.randomUUID(),
@@ -283,12 +263,12 @@ export function TransferNotificationsProvider({ children }: { children: ReactNod
         fileName: file.name,
         ownerUserId: file.ownerId,
         requesterUserId: currentUserId,
-        requesterEmail: storedUser?.email,
-        requesterName: storedUser?.name ?? user.name,
+        requesterEmail,
+        requesterName,
         requestedAt: new Date().toISOString(),
       });
     },
-    [requestFile, socketUrl, currentUserId, storedUser?.email, storedUser?.name, user.name],
+    [requestFile, socketUrl, currentUserId, requesterEmail, requesterName],
   );
 
   const downloadCompletedTransfer = useCallback(async (transferId: string) => {

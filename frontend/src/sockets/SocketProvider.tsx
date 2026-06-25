@@ -16,11 +16,10 @@ export function SocketProvider({ urls, children }: SocketProviderProps) {
   const initSockets = useEffectEvent(() => {
     const created: Record<string, AppSocket> = {};
     const initialStatus: Record<string, SocketStatus> = {};
-    const token = localStorage.getItem('token');
-
     for (const url of urls) {
       created[url] = io(url, {
         transports: ['websocket'],
+        withCredentials: true,
         secure: true,
         reconnection: true,
         reconnectionAttempts: Infinity,
@@ -28,7 +27,6 @@ export function SocketProvider({ urls, children }: SocketProviderProps) {
         timeout: 10_000,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
-        auth: token ? { token } : undefined,
       });
       initialStatus[url] = 'disconnected';
     }
