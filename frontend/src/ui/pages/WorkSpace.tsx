@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FolderSearch } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { WorkspaceCard } from '@/ui/components/WorkspaceCard';
 import { EditWorkspaceDialog } from '@/ui/components/ActionMenu/EditWorkspaceDialog';
 import { FileBrowserModal } from '@/ui/components/FileBrowserModal';
@@ -10,6 +11,7 @@ import type { Workspace } from '@/types/workspace.type';
 
 export function WorkSpace() {
   const { workspaces, isLoading, isError, updateWorkspace, deleteWorkspace, togglePin } = useWorkspacesSection();
+  const navigate = useNavigate();
   const [editWorkspace, setEditWorkspace] = useState<Workspace | null>(null);
   const [fileBrowserOpen, setFileBrowserOpen] = useState(false);
 
@@ -29,7 +31,7 @@ export function WorkSpace() {
           onClick={() => setFileBrowserOpen(true)}
         >
           <FolderSearch className="size-4" />
-          Index File
+          Add File
         </button>
       </div>
 
@@ -46,6 +48,7 @@ export function WorkSpace() {
               <WorkspaceCard
                 key={workspace.id}
                 workspace={workspace}
+                onOpen={() => navigate(`/workspaces/${workspace.id}`)}
                 onTogglePin={togglePin}
                 onEdit={setEditWorkspace}
                 onDownload={() => {}}
@@ -64,7 +67,7 @@ export function WorkSpace() {
           </div>
         ) : !files?.length ? (
           <p className="text-sm text-muted-foreground">
-            No files indexed yet. Click <strong>Index File</strong> to browse and add files.
+            No files indexed yet. Click <strong>Add File</strong> to browse and add files.
           </p>
         ) : (
           <div className="flex flex-col gap-0.5">

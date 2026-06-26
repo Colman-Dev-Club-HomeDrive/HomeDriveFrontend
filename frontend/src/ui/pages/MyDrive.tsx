@@ -3,8 +3,9 @@ import { FolderSearch } from 'lucide-react';
 import { FileBrowserModal } from '@/ui/components/FileBrowserModal';
 import { FileItem } from '@/ui/components/FileItem';
 import { useListFilesQuery } from '@/store/apis/files.api';
+import { useListWorkspacesQuery } from '@/store/apis/workspaces.api';
 import type { MediaType } from '@/types/file.type';
-import { useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 const MEDIA_TYPE_LABELS: Record<MediaType, string> = {
   documents: 'Documents',
@@ -24,9 +25,16 @@ function parseMediaType(value: string | null): MediaType | undefined {
 export function MyDrive() {
   const [fileBrowserOpen, setFileBrowserOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const { workspaceId } = useParams();
   const mediaType = parseMediaType(searchParams.get('mediaType'));
+  const { data: workspaces = [] } = useListWorkspacesQuery();
+  const workspace = workspaceId ? workspaces.find((entry) => entry.id === workspaceId) : undefined;
   const { data: files, isLoading, isError } = useListFilesQuery(
-    mediaType ? { mediaType } : undefined
+    workspaceId
+      ? { workspaceId, ...(mediaType ? { mediaType } : {}) }
+      : mediaType
+        ? { mediaType }
+        : undefined
   );
 
   const clearMediaFilter = () => {
@@ -39,7 +47,7 @@ export function MyDrive() {
     <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">My Drive</h1>
+          <h1 className="text-2xl font-bold">{workspace?.name ?? 'My Drive'}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {isLoading
               ? 'Loading...'
@@ -63,7 +71,7 @@ export function MyDrive() {
           onClick={() => setFileBrowserOpen(true)}
         >
           <FolderSearch className="size-4" />
-          Index File
+          Add File
         </button>
       </div>
 
@@ -77,7 +85,7 @@ export function MyDrive() {
         </div>
       ) : !files?.length ? (
         <p className="text-sm text-muted-foreground">
-          No files indexed yet. Click <strong>Index File</strong> to browse and add files.
+          No files indexed yet. Click <strong>Add File</strong> to browse and add files.
         </p>
       ) : (
         <div className="flex flex-col gap-0.5">
@@ -87,7 +95,7 @@ export function MyDrive() {
         </div>
       )}
 
-      <FileBrowserModal open={fileBrowserOpen} onOpenChange={setFileBrowserOpen} />
+      <FileBrowserModal open={fileBrowserOpen} onOpenChange={setFileBrowserOpen} workspaceId={workspaceId} />
     </div>
   );
 }

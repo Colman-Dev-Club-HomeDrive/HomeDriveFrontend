@@ -24,6 +24,9 @@ export function WorkspacesSection() {
     togglePin,
     reorderWorkspaces,
   } = useWorkspacesSection();
+  const openWorkspace = (workspaceId: string) => {
+    navigate(`/workspaces/${workspaceId}`);
+  };
 
   return (
     <>
@@ -56,6 +59,7 @@ export function WorkspacesSection() {
                 <WorkspaceCard
                   key={workspace.id}
                   workspace={workspace}
+                  onOpen={() => openWorkspace(workspace.id)}
                   onTogglePin={togglePin}
                   onEdit={setEditWorkspace}
                   onDownload={() => navigate('/workspaces')}
