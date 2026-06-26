@@ -30,6 +30,7 @@ export const router = createBrowserRouter([
       { path: '/home', Component: Home },
       { path: '/mydrive', Component: MyDrive },
       { path: '/workspaces', Component: WorkSpace },
+      { path: '/workspaces/:workspaceId', Component: MyDrive },
     ]
   },
   {

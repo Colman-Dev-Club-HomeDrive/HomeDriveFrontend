@@ -48,3 +48,11 @@ export type BrowseDirectoryResult = {
   path: string;
   entries: BrowseEntry[];
 };
+
+export type StorageStats = {
+  statsPath: string;
+  capacityBytes: number;
+  availableBytes: number;
+  serverUsedBytes: number;
+  metadataUsedBytes: number;
+};

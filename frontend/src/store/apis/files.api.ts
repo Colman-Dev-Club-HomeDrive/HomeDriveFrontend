@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithAuth } from './baseQuery';
-import type { BrowseDirectoryResult, IndexedFile, MediaType, MediaTypeCount } from '@/types/file.type';
+import type { BrowseDirectoryResult, IndexedFile, MediaType, MediaTypeCount, StorageStats } from '@/types/file.type';
 
 type ListFilesArgs =
   | string
@@ -45,6 +45,13 @@ export const filesApi = createApi({
       providesTags: ['File'],
     }),
 
+    getStorageStats: builder.query<StorageStats, void>({
+      query: () => ({
+        url: '/files/storage',
+      }),
+      providesTags: ['File'],
+    }),
+
     indexFile: builder.mutation<IndexedFile, { path: string; workspaceId?: string; shareWith?: string }>({
       query: (body) => ({ 
         url: '/files', 
@@ -78,6 +85,7 @@ export const {
   useBrowseDirectoryQuery,
   useListFilesQuery,
   useGetMediaTypeCountsQuery,
+  useGetStorageStatsQuery,
   useIndexFileMutation,
   useDeleteFileMutation,
   useOpenFileMutation,

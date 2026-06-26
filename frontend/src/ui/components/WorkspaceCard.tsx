@@ -4,17 +4,29 @@ import type { Workspace } from '@/types/workspace.type';
 
 export type WorkspaceCardProps = {
   workspace: Workspace;
+  onOpen: (workspace: Workspace) => void;
   onTogglePin: (id: string) => void;
   onEdit: (workspace: Workspace) => void;
   onDownload: (workspace: Workspace) => void;
 };
 
-export function WorkspaceCard({ workspace, onTogglePin, onEdit, onDownload }: WorkspaceCardProps) {
+export function WorkspaceCard({ workspace, onOpen, onTogglePin, onEdit, onDownload }: WorkspaceCardProps) {
   const { id, name, fileCount, icon, color, pinned } = workspace;
   const Icon = ICON_MAP[icon];
 
   return (
-    <div className="group relative flex flex-col gap-3 rounded-2xl bg-card p-4 text-left shadow-sm transition-all hover:bg-accent hover:shadow-md active:scale-[0.98]">
+    <div
+      role="button"
+      tabIndex={0}
+      className="group relative flex flex-col gap-3 rounded-2xl bg-card p-4 text-left shadow-sm transition-all hover:bg-accent hover:shadow-md active:scale-[0.98]"
+      onClick={() => onOpen(workspace)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpen(workspace);
+        }
+      }}
+    >
       <div className="flex items-start justify-between">
         <div className="flex size-9 items-center justify-center rounded-xl bg-accent shadow-sm">
           <Icon className="size-4 text-slate-500 dark:text-slate-400" />
