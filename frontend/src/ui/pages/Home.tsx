@@ -21,7 +21,7 @@ export function Home() {
   const [fileBrowserOpen, setFileBrowserOpen] = useState(false);
   return (
     <div
-      className="mx-auto w-full max-w-7xl flex min-h-full flex-col gap-6 bg-background px-0 py-8"
+      className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-6 bg-background px-4 py-8 sm:px-6"
       onDragEnter={(e) => {
         e.preventDefault();
         handleDragEnter();
@@ -44,7 +44,7 @@ export function Home() {
       </div>
 
       {/* Top row: left column (Storage + Media) | right column (Create New) */}
-      <div className="grid grid-cols-[1fr_1.6fr] gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.6fr]">
         {/* Left column */}
         <div className="flex flex-col gap-4">
           <StorageCard usedGb={65} totalGb={100} />

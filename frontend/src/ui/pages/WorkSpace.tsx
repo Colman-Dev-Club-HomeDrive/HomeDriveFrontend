@@ -16,8 +16,8 @@ export function WorkSpace() {
   const { data: files, isLoading: filesLoading } = useListFilesQuery(undefined);
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-6 px-6 py-8">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">All Workspaces</h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -25,7 +25,7 @@ export function WorkSpace() {
           </p>
         </div>
         <button
-          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
           onClick={() => setFileBrowserOpen(true)}
         >
           <FolderSearch className="size-4" />
@@ -37,7 +37,7 @@ export function WorkSpace() {
         <p className="text-sm text-destructive">Failed to load workspaces.</p>
       )}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {isLoading
           ? Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />

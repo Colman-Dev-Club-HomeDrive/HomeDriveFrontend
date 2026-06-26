@@ -29,7 +29,7 @@ export function WorkspacesSection() {
     <>
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2
               className="font-semibold cursor-pointer hover:underline"
               onClick={() => navigate('/workspaces')}
@@ -47,7 +47,7 @@ export function WorkspacesSection() {
             <p className="text-xs text-destructive">Failed to load workspaces.</p>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {isLoading
               ? Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />
