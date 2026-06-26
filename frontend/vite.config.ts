@@ -11,6 +11,7 @@ export default defineConfig({
     }
   },
   server: {
+    allowedHosts: ['dropsome.org'],
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
