@@ -36,8 +36,8 @@ export function MyDrive() {
   };
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-6 px-6 py-8">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">My Drive</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -59,7 +59,7 @@ export function MyDrive() {
           )}
         </div>
         <button
-          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
           onClick={() => setFileBrowserOpen(true)}
         >
           <FolderSearch className="size-4" />
