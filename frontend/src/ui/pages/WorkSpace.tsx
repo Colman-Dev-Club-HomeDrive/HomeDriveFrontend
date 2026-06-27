@@ -1,19 +1,20 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { FolderSearch } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { WorkspaceCard } from '@/ui/components/WorkspaceCard';
 import { EditWorkspaceDialog } from '@/ui/components/ActionMenu/EditWorkspaceDialog';
-import { FileBrowserModal } from '@/ui/components/FileBrowserModal';
 import { FileItem } from '@/ui/components/FileItem';
 import { useWorkspacesSection } from '@/hooks/useWorkspacesSection';
 import { useListFilesQuery } from '@/store/apis/files.api';
 import type { Workspace } from '@/types/workspace.type';
+import { useFileUpload } from '@/hooks/useFileUpload';
 
 export function WorkSpace() {
   const { workspaces, isLoading, isError, updateWorkspace, deleteWorkspace, togglePin } = useWorkspacesSection();
   const navigate = useNavigate();
   const [editWorkspace, setEditWorkspace] = useState<Workspace | null>(null);
-  const [fileBrowserOpen, setFileBrowserOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { addFiles } = useFileUpload();
 
   const { data: files, isLoading: filesLoading } = useListFilesQuery(undefined);
 
@@ -28,12 +29,23 @@ export function WorkSpace() {
         </div>
         <button
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-          onClick={() => setFileBrowserOpen(true)}
+          onClick={() => fileInputRef.current?.click()}
         >
           <FolderSearch className="size-4" />
           Add File
         </button>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          addFiles(e.target.files, 'file');
+          e.currentTarget.value = '';
+        }}
+      />
 
       {isError && (
         <p className="text-sm text-destructive">Failed to load workspaces.</p>
@@ -84,11 +96,6 @@ export function WorkSpace() {
         onOpenChange={(open) => { if (!open) setEditWorkspace(null); }}
         onSubmit={(id, values) => { updateWorkspace(id, values); setEditWorkspace(null); }}
         onDelete={(id) => { deleteWorkspace(id); setEditWorkspace(null); }}
-      />
-
-      <FileBrowserModal
-        open={fileBrowserOpen}
-        onOpenChange={setFileBrowserOpen}
       />
     </div>
   );

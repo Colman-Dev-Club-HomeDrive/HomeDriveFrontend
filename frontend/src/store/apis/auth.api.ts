@@ -3,7 +3,6 @@ import { baseQueryWithAuth } from './baseQuery';
 import type {
   LoginRequest,
   LoginResponse,
-  MeResponse,
   RegisterRequest,
   RegisterResponse,
 } from '@/types/auth.type';
@@ -17,41 +16,19 @@ const toAuthResponse = <T extends { user: NonNullable<ReturnType<typeof normaliz
     throw new Error('Invalid auth response: user is missing');
   }
 
-  return { user } as T;
-};
+  const token =
+    response !== null && typeof response === 'object' && 'token' in response
+      ? (response as Record<string, unknown>).token
+      : undefined;
 
-const AUTH_ME_PATHS = ['/auth/me', '/users/me'] as const;
+  return { user, token } as T;
+};
 
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: baseQueryWithAuth,
   tagTypes: ['Auth'],
   endpoints: (builder) => ({
-    getMe: builder.query<MeResponse, void>({
-      async queryFn(_arg, _api, _extraOptions, baseQuery) {
-        let lastError: unknown = null;
-
-        for (const url of AUTH_ME_PATHS) {
-          const result = await baseQuery(url);
-
-          if (result.error) {
-            lastError = result.error;
-            continue;
-          }
-
-          try {
-            return { data: toAuthResponse<MeResponse>(result.data) };
-          } catch (error) {
-            lastError = error;
-          }
-        }
-
-        return {
-          error: (lastError as { status?: number }) ?? { status: 404, data: 'Current user not found' },
-        };
-      },
-      providesTags: ['Auth'],
-    }),
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (body) => ({
         url: '/auth/login',
@@ -59,6 +36,16 @@ export const authApi = createApi({
         body,
       }),
       transformResponse: (response) => toAuthResponse<LoginResponse>(response),
+      onQueryStarted: async (_arg, { queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled;
+          if (data.token) {
+            localStorage.setItem('token', data.token);
+          }
+        } catch {
+          // Error handled by the component
+        }
+      },
       invalidatesTags: ['Auth'],
     }),
     register: builder.mutation<RegisterResponse, RegisterRequest>({
@@ -68,6 +55,16 @@ export const authApi = createApi({
         body,
       }),
       transformResponse: (response) => toAuthResponse<RegisterResponse>(response),
+      onQueryStarted: async (_arg, { queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled;
+          if (data.token) {
+            localStorage.setItem('token', data.token);
+          }
+        } catch {
+          // Error handled by the component
+        }
+      },
       invalidatesTags: ['Auth'],
     }),
     logout: builder.mutation<void, void>({
@@ -75,13 +72,15 @@ export const authApi = createApi({
         url: '/auth/logout',
         method: 'POST',
       }),
+      onQueryStarted: async () => {
+        localStorage.removeItem('token');
+      },
       invalidatesTags: ['Auth'],
     }),
   }),
 });
 
 export const {
-  useGetMeQuery,
   useLoginMutation,
   useRegisterMutation,
   useLogoutMutation,

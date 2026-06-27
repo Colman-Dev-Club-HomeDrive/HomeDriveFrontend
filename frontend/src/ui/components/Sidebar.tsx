@@ -32,7 +32,7 @@ export function Sidebar({ user }: SidebarProps) {
           <NavLink
             key={to}
             to={to}
-            end={to === '/'}
+            end={false}
             className={({ isActive }) =>
               cn(
                 'flex h-10 w-full items-center gap-3 overflow-hidden rounded-lg px-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',

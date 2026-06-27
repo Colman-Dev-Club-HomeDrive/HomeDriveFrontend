@@ -5,7 +5,16 @@ import { NotFound } from '@/ui/pages/NotFound';
 import { WorkSpace } from '@/ui/pages/WorkSpace';
 import { Root } from '@/ui/Root';
 import { SignUp } from '@/ui/pages/SignUp';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, redirect } from 'react-router-dom';
+
+// Auth check loader
+function requireAuth() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return redirect('/login');
+  }
+  return null;
+}
 
 export const router = createBrowserRouter([
   {
@@ -27,10 +36,26 @@ export const router = createBrowserRouter([
   {
     Component: Root,
     children: [
-      { path: '/home', Component: Home },
-      { path: '/mydrive', Component: MyDrive },
-      { path: '/workspaces', Component: WorkSpace },
-      { path: '/workspaces/:workspaceId', Component: MyDrive },
+      { 
+        path: '/home', 
+        Component: Home,
+        loader: requireAuth
+      },
+      { 
+        path: '/mydrive', 
+        Component: MyDrive,
+        loader: requireAuth
+      },
+      { 
+        path: '/workspaces', 
+        Component: WorkSpace,
+        loader: requireAuth
+      },
+      { 
+        path: '/workspaces/:workspaceId', 
+        Component: MyDrive,
+        loader: requireAuth
+      },
     ]
   },
   {

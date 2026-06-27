@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useRef } from 'react';
 import { FolderSearch } from 'lucide-react';
-import { FileBrowserModal } from '@/ui/components/FileBrowserModal';
 import { FileItem } from '@/ui/components/FileItem';
 import { useListFilesQuery } from '@/store/apis/files.api';
 import { useListWorkspacesQuery } from '@/store/apis/workspaces.api';
 import type { MediaType } from '@/types/file.type';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { useFileUpload } from '@/hooks/useFileUpload';
 
 const MEDIA_TYPE_LABELS: Record<MediaType, string> = {
   documents: 'Documents',
@@ -23,7 +23,8 @@ function parseMediaType(value: string | null): MediaType | undefined {
 }
 
 export function MyDrive() {
-  const [fileBrowserOpen, setFileBrowserOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { addFiles } = useFileUpload();
   const [searchParams, setSearchParams] = useSearchParams();
   const { workspaceId } = useParams();
   const mediaType = parseMediaType(searchParams.get('mediaType'));
@@ -68,12 +69,23 @@ export function MyDrive() {
         </div>
         <button
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-          onClick={() => setFileBrowserOpen(true)}
+          onClick={() => fileInputRef.current?.click()}
         >
           <FolderSearch className="size-4" />
           Add File
         </button>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          addFiles(e.target.files, 'file', workspaceId ? { workspaceId } : undefined);
+          e.currentTarget.value = '';
+        }}
+      />
 
       {isError && <p className="text-sm text-destructive">Failed to load files.</p>}
 
@@ -94,8 +106,6 @@ export function MyDrive() {
           ))}
         </div>
       )}
-
-      <FileBrowserModal open={fileBrowserOpen} onOpenChange={setFileBrowserOpen} workspaceId={workspaceId} />
     </div>
   );
 }

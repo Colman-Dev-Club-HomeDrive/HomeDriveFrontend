@@ -1,16 +1,27 @@
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
 import type { DriveFile } from '@/types/file.type';
+import { useUploadFileMutation } from '@/store/apis/files.api';
+import { useCreateWorkspaceMutation } from '@/store/apis/workspaces.api';
+import { WORKSPACE_COLORS } from '@/consts/consts';
 
 interface FileUploadContextValue {
   files: DriveFile[];
   isDragging: boolean;
-  addFiles: (fileList: FileList | null, source?: 'file' | 'folder') => void;
+  addFiles: (
+    fileList: FileList | null,
+    source?: 'file' | 'folder',
+    options?: { workspaceId?: string },
+  ) => void;
   removeFile: (id: string) => void;
   clearAll: () => void;
   /** Drag-counter-safe setter — call with true on dragenter, false on dragleave/drop */
   handleDragEnter: () => void;
   handleDragLeave: () => void;
-  handleDrop: (fileList: FileList | null, source?: 'file' | 'folder') => void;
+  handleDrop: (
+    fileList: FileList | null,
+    source?: 'file' | 'folder',
+    options?: { workspaceId?: string },
+  ) => void;
 }
 
 const FileUploadContext = createContext<FileUploadContextValue | null>(null);
@@ -19,21 +30,85 @@ export function FileUploadProvider({ children }: { children: ReactNode }) {
   const [files, setFiles] = useState<DriveFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const dragCounter = useRef(0);
+  const [uploadFile] = useUploadFileMutation();
+  const [createWorkspace] = useCreateWorkspaceMutation();
 
-  const addFiles = useCallback((fileList: FileList | null, source: 'file' | 'folder' = 'file') => {
-    if (!fileList || fileList.length === 0) return;
-    const newFiles: DriveFile[] = Array.from(fileList).map((f) => ({
-      id: crypto.randomUUID(),
-      name: f.name,
-      size: f.size,
-      type: f.type,
-      source,
-      path: source === 'folder' ? f.webkitRelativePath || f.name : undefined,
-      status: 'queued',
-      progress: 0,
-    }));
-    setFiles((prev) => [...prev, ...newFiles]);
+  const setFileProgress = useCallback((id: string, status: DriveFile['status'], progress: number) => {
+    setFiles((prev) => prev.map((file) => (file.id === id ? { ...file, status, progress } : file)));
   }, []);
+
+  const addFiles = useCallback(
+    (
+      fileList: FileList | null,
+      source: 'file' | 'folder' = 'file',
+      options?: { workspaceId?: string },
+    ) => {
+      if (!fileList || fileList.length === 0) return;
+      const selectedFiles = Array.from(fileList);
+      const newFiles: DriveFile[] = selectedFiles.map((f) => ({
+        id: crypto.randomUUID(),
+        name: f.name,
+        size: f.size,
+        type: f.type || 'application/octet-stream',
+        source,
+        path: source === 'folder' ? f.webkitRelativePath || f.name : undefined,
+        status: 'queued',
+        progress: 0,
+      }));
+
+      setFiles((prev) => [...prev, ...newFiles]);
+
+      void (async () => {
+        const workspaceIdByRootFolder = new Map<string, string>();
+
+        if (source === 'folder' && !options?.workspaceId) {
+          const rootFolders = Array.from(
+            new Set(
+              selectedFiles
+                .map((file) => file.webkitRelativePath.split('/').filter(Boolean)[0])
+                .filter((folderName) => folderName && folderName.trim() !== ''),
+            ),
+          );
+
+          await Promise.all(
+            rootFolders.map(async (folderName, index) => {
+              try {
+                const createdWorkspace = await createWorkspace({
+                  name: folderName,
+                  icon: 'folder',
+                  color: WORKSPACE_COLORS[index % WORKSPACE_COLORS.length],
+                }).unwrap();
+                workspaceIdByRootFolder.set(folderName, createdWorkspace.id);
+              } catch {
+                // If workspace creation fails, files still upload to My Drive.
+              }
+            }),
+          );
+        }
+
+        newFiles.forEach((queuedFile, index) => {
+          const browserFile = selectedFiles[index];
+          const rootFolder = browserFile.webkitRelativePath.split('/').filter(Boolean)[0];
+          const derivedWorkspaceId =
+            options?.workspaceId ?? (rootFolder ? workspaceIdByRootFolder.get(rootFolder) : undefined);
+
+          void (async () => {
+            try {
+              setFileProgress(queuedFile.id, 'uploading', 25);
+              await uploadFile({
+                file: browserFile,
+                ...(derivedWorkspaceId ? { workspaceId: derivedWorkspaceId } : {}),
+              }).unwrap();
+              setFileProgress(queuedFile.id, 'done', 100);
+            } catch {
+              setFileProgress(queuedFile.id, 'error', 0);
+            }
+          })();
+        });
+      })();
+    },
+    [createWorkspace, uploadFile, setFileProgress],
+  );
 
   const removeFile = useCallback((id: string) => {
     setFiles((prev) => prev.filter((f) => f.id !== id));
@@ -52,10 +127,14 @@ export function FileUploadProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const handleDrop = useCallback(
-    (fileList: FileList | null, source: 'file' | 'folder' = 'file') => {
+    (
+      fileList: FileList | null,
+      source: 'file' | 'folder' = 'file',
+      options?: { workspaceId?: string },
+    ) => {
       dragCounter.current = 0;
       setIsDragging(false);
-      addFiles(fileList, source);
+      addFiles(fileList, source, options);
     },
     [addFiles],
   );

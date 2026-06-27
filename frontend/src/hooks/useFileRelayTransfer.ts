@@ -19,6 +19,19 @@ import {
 
 export type DurableWriteFn = () => Promise<number | void>;
 
+function isTransferDebugEnabled(): boolean {
+  try {
+    return localStorage.getItem('debugTransfers') === '1' || import.meta.env.DEV;
+  } catch {
+    return import.meta.env.DEV;
+  }
+}
+
+function transferDebugLog(...args: unknown[]) {
+  if (!isTransferDebugEnabled()) return;
+  console.log('[transfer-hook]', ...args);
+}
+
 export function useFileRelayTransfer(socketUrl: string) {
   const { getSocket } = useSockets();
   const socket = getSocket(socketUrl);
@@ -28,17 +41,25 @@ export function useFileRelayTransfer(socketUrl: string) {
   const [transferErrors, setTransferErrors] = useState<TransferErrorDto[]>([]);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      transferDebugLog('socket unavailable for url', socketUrl);
+      return;
+    }
+
+    transferDebugLog('binding listeners', { socketId: socket.id });
 
     const onPermissionPrompt = (payload: TransferRequestDto) => {
+      transferDebugLog('received file:permission-prompt', payload);
       setPermissionPrompts((prev) => [payload, ...prev]);
     };
 
     const onPermissionResult = (payload: TransferPermissionResponseDto) => {
+      transferDebugLog('received file:permission-result', payload);
       setPermissionResults((prev) => [payload, ...prev]);
     };
 
     const onTransferError = (payload: TransferErrorDto) => {
+      transferDebugLog('received file:error', payload);
       setTransferErrors((prev) => [payload, ...prev]);
     };
 
@@ -47,22 +68,61 @@ export function useFileRelayTransfer(socketUrl: string) {
     socket.on('file:error', onTransferError);
 
     return () => {
+      transferDebugLog('unbinding listeners', { socketId: socket.id });
       socket.off('file:permission-prompt', onPermissionPrompt);
       socket.off('file:permission-result', onPermissionResult);
       socket.off('file:error', onTransferError);
     };
-  }, [socket]);
+  }, [socket, socketUrl]);
 
   const requestFile = useCallback(
     (payload: TransferRequestDto) => {
-      socket?.emit('file:request', payload);
+      transferDebugLog('emit file:request', { payload, socketConnected: socket?.connected, socketId: socket?.id });
+      if (!socket) return;
+
+      if (!socket.connected) {
+        const token = localStorage.getItem('token') ?? undefined;
+        socket.auth = token ? { token } : {};
+
+        socket.once('connect', () => {
+          transferDebugLog('delayed emit file:request after connect', {
+            requestId: payload.requestId,
+            socketId: socket.id,
+          });
+          socket.emit('file:request', payload);
+        });
+
+        socket.connect();
+        return;
+      }
+
+      socket.emit('file:request', payload);
     },
     [socket],
   );
 
   const respondToPermission = useCallback(
     (payload: TransferPermissionResponseDto) => {
-      socket?.emit('file:permission-response', payload);
+      transferDebugLog('emit file:permission-response', payload);
+      if (!socket) return;
+
+      if (!socket.connected) {
+        const token = localStorage.getItem('token') ?? undefined;
+        socket.auth = token ? { token } : {};
+
+        socket.once('connect', () => {
+          transferDebugLog('delayed emit file:permission-response after connect', {
+            requestId: payload.requestId,
+            socketId: socket.id,
+          });
+          socket.emit('file:permission-response', payload);
+        });
+
+        socket.connect();
+        return;
+      }
+
+      socket.emit('file:permission-response', payload);
     },
     [socket],
   );

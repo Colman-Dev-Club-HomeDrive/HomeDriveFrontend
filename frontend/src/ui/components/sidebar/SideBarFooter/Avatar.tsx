@@ -1,6 +1,6 @@
 import { LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useLogoutMutation, useGetMeQuery } from '@/store/apis/auth.api';
+import { useLogoutMutation } from '@/store/apis/auth.api';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { clearUser, selectUser } from '@/store/slices/user.slice';
 
@@ -8,8 +8,7 @@ export function Avatar() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
-  const { data: meData } = useGetMeQuery();
-  const displayName = meData?.user?.name || user.name;
+  const displayName = user.name;
   const [logout, { isLoading }] = useLogoutMutation();
 
   const handleLogout = async () => {

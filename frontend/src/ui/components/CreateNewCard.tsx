@@ -4,30 +4,17 @@ import { useHotkey } from '@tanstack/react-hotkeys';
 import { FolderPlus, Plus } from 'lucide-react';
 import { useRef } from 'react';
 
-type CreateNewCardProps = {
-  onIndexFile?: () => void;
-  onIndexFolder?: () => void;
-};
-
-export function CreateNewCard({ onIndexFile, onIndexFolder }: CreateNewCardProps) {
+export function CreateNewCard() {
   const { addFiles, isDragging } = useFileUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
   const handleActionClick = (label: string) => {
     if (label === 'Upload Files') {
-      if (onIndexFile) {
-        onIndexFile();
-      } else {
-        fileInputRef.current?.click();
-      }
+      fileInputRef.current?.click();
     }
     if (label === 'New Folder') {
-      if (onIndexFolder) {
-        onIndexFolder();
-      } else {
-        folderInputRef.current?.click();
-      }
+      folderInputRef.current?.click();
     }
   };
 
@@ -39,21 +26,13 @@ export function CreateNewCard({ onIndexFile, onIndexFolder }: CreateNewCardProps
   useHotkey('Mod+U', (event) => {
     if (isTypingTarget(event.target)) return;
     event.preventDefault();
-    if (onIndexFile) {
-      onIndexFile();
-    } else {
-      fileInputRef.current?.click();
-    }
+    fileInputRef.current?.click();
   });
 
   useHotkey('Mod+F', (event) => {
     if (isTypingTarget(event.target)) return;
     event.preventDefault();
-    if (onIndexFolder) {
-      onIndexFolder();
-    } else {
-      folderInputRef.current?.click();
-    }
+    folderInputRef.current?.click();
   });
 
   return (
@@ -88,13 +67,13 @@ export function CreateNewCard({ onIndexFile, onIndexFolder }: CreateNewCardProps
       {/* Top: drop hint + heading */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2 text-sm text-slate-400">
-          <button
-            className="flex size-7 items-center justify-center rounded-full hover:opacity-80"
+          <span
+            className="flex size-7 items-center justify-center rounded-full"
             style={{ backgroundColor: 'var(--color-dark-card-alt)' }}
-            onClick={() => fileInputRef.current?.click()}
+            aria-hidden="true"
           >
             <Plus className="size-4" />
-          </button>
+          </span>
           Drop anywhere to upload
         </div>
         <div>

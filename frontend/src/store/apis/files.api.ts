@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithAuth } from './baseQuery';
-import type { BrowseDirectoryResult, IndexedFile, MediaType, MediaTypeCount, StorageStats } from '@/types/file.type';
+import type { IndexedFile, MediaType, MediaTypeCount, StorageStats } from '@/types/file.type';
 
 type ListFilesArgs =
   | string
@@ -15,13 +15,6 @@ export const filesApi = createApi({
   baseQuery: baseQueryWithAuth,
   tagTypes: ['File'],
   endpoints: (builder) => ({
-    browseDirectory: builder.query<BrowseDirectoryResult, string | undefined>({
-      query: (path) => ({
-        url: '/files/browse',
-        params: path ? { path } : {},
-      }),
-    }),
-
     listFiles: builder.query<IndexedFile[], ListFilesArgs>({
       query: (args) => {
         const params =
@@ -52,11 +45,41 @@ export const filesApi = createApi({
       providesTags: ['File'],
     }),
 
-    indexFile: builder.mutation<IndexedFile, { path: string; workspaceId?: string; shareWith?: string }>({
-      query: (body) => ({ 
-        url: '/files', 
-        method: 'POST', 
-        body: Object.fromEntries(Object.entries(body).filter(([, v]) => v !== undefined))
+    uploadFile: builder.mutation<
+      IndexedFile,
+      { file: File; workspaceId?: string; shareWith?: string }
+    >({
+      query: ({ file, workspaceId, shareWith }) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        if (workspaceId) formData.append('workspaceId', workspaceId);
+        if (shareWith) formData.append('shareWith', shareWith);
+        return {
+          url: '/files/upload',
+          method: 'POST',
+          body: formData,
+        };
+      },
+      invalidatesTags: ['File'],
+    }),
+
+    indexFile: builder.mutation<
+      IndexedFile,
+      {
+        path?: string;
+        name?: string;
+        size?: number;
+        mimeType?: string;
+        extension?: string;
+        isDirectory?: boolean;
+        workspaceId?: string;
+        shareWith?: string;
+      }
+    >({
+      query: (body) => ({
+        url: '/files',
+        method: 'POST',
+        body: Object.fromEntries(Object.entries(body).filter(([, v]) => v !== undefined)),
       }),
       invalidatesTags: ['File'],
     }),
@@ -64,10 +87,6 @@ export const filesApi = createApi({
     deleteFile: builder.mutation<{ message: string }, string>({
       query: (id) => ({ url: `/files/${id}`, method: 'DELETE' }),
       invalidatesTags: ['File'],
-    }),
-
-    openFile: builder.mutation<{ message: string }, string>({
-      query: (id) => ({ url: `/files/${id}/open`, method: 'POST' }),
     }),
 
     renameFile: builder.mutation<IndexedFile, { id: string; name: string }>({
@@ -82,12 +101,11 @@ export const filesApi = createApi({
 });
 
 export const {
-  useBrowseDirectoryQuery,
   useListFilesQuery,
   useGetMediaTypeCountsQuery,
   useGetStorageStatsQuery,
+  useUploadFileMutation,
   useIndexFileMutation,
   useDeleteFileMutation,
-  useOpenFileMutation,
   useRenameFileMutation,
 } = filesApi;

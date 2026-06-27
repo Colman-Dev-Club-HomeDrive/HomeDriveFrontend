@@ -35,20 +35,6 @@ export type MediaTypeCount = {
   count: number;
 };
 
-export type BrowseEntry = {
-  name: string;
-  path: string;
-  isDirectory: boolean;
-  size: number;
-  extension: string;
-  mimeType: string;
-};
-
-export type BrowseDirectoryResult = {
-  path: string;
-  entries: BrowseEntry[];
-};
-
 export type StorageStats = {
   statsPath: string;
   capacityBytes: number;

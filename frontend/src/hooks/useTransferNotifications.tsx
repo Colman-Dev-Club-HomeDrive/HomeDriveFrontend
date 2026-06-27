@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { TransferChunkDto, TransferDurableAckDto, TransferRequestDto, TransferStartDto } from '@homedrive/types';
+import type { TransferChunkDto, TransferDurableAckDto, TransferStartDto } from '@homedrive/types';
 import { useAppSelector } from '@/store/hooks';
 import { selectUser } from '@/store/slices/user.slice';
-import { VITE_SOCKET_URL } from '@/consts/consts';
+import { SOCKET_BASE_URL } from '@/consts/consts';
 import { useFileRelayTransfer } from '@/hooks/useFileRelayTransfer';
 import {
   buildTransferBlob,
@@ -39,6 +39,35 @@ type TransferNotificationsContextValue = {
 
 const TransferNotificationsContext = createContext<TransferNotificationsContextValue | null>(null);
 
+function isTransferDebugEnabled(): boolean {
+  try {
+    return localStorage.getItem('debugTransfers') === '1' || import.meta.env.DEV;
+  } catch {
+    return import.meta.env.DEV;
+  }
+}
+
+function transferUiDebugLog(...args: unknown[]) {
+  if (!isTransferDebugEnabled()) return;
+  console.log('[transfer-ui]', ...args);
+}
+
+function getUserIdFromToken(): string {
+  const token = localStorage.getItem('token');
+  if (!token) return '';
+
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return '';
+    const normalized = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const payload = JSON.parse(atob(padded)) as { userId?: string };
+    return payload.userId ?? '';
+  } catch {
+    return '';
+  }
+}
+
 function toUint8Array(payload: TransferChunkDto['payload']): Uint8Array {
   if (payload instanceof Uint8Array) {
     return payload;
@@ -72,8 +101,8 @@ function pickFileFromDevice(acceptFileName?: string): Promise<File | null> {
 
 export function TransferNotificationsProvider({ children }: { children: ReactNode }) {
   const user = useAppSelector(selectUser);
-  const socketUrl = VITE_SOCKET_URL ?? '';
-  const currentUserId = user.id || '';
+  const socketUrl = SOCKET_BASE_URL;
+  const currentUserId = user.id || getUserIdFromToken();
   const requesterEmail = user.email || undefined;
   const requesterName = user.name || undefined;
 
@@ -103,6 +132,11 @@ export function TransferNotificationsProvider({ children }: { children: ReactNod
   const prevPromptCountRef = useRef(0);
   useEffect(() => {
     if (permissionPrompts.length > prevPromptCountRef.current) {
+      transferUiDebugLog('new permission prompt count', {
+        previous: prevPromptCountRef.current,
+        next: permissionPrompts.length,
+        latest: permissionPrompts[0],
+      });
       setToastOpen(true);
     }
     prevPromptCountRef.current = permissionPrompts.length;
@@ -255,6 +289,14 @@ export function TransferNotificationsProvider({ children }: { children: ReactNod
 
   const requestFileFromOwner = useCallback(
     (file: RequestableFile) => {
+      transferUiDebugLog('requestFileFromOwner invoked', {
+        file,
+        socketUrl,
+        currentUserId,
+        requesterEmail,
+        requesterName,
+      });
+
       if (!socketUrl || !currentUserId) return;
 
       requestFile({
@@ -267,6 +309,8 @@ export function TransferNotificationsProvider({ children }: { children: ReactNod
         requesterName,
         requestedAt: new Date().toISOString(),
       });
+
+      transferUiDebugLog('requestFileFromOwner emitted request event');
     },
     [requestFile, socketUrl, currentUserId, requesterEmail, requesterName],
   );
