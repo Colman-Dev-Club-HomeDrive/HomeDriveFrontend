@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { FolderSearch } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { WorkspaceCard } from '@/ui/components/WorkspaceCard';
@@ -8,6 +8,12 @@ import { useWorkspacesSection } from '@/hooks/useWorkspacesSection';
 import { useListFilesQuery } from '@/store/apis/files.api';
 import type { Workspace } from '@/types/workspace.type';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { useFileSearch } from '@/hooks/useFileSearch';
+import {
+  filterIndexedFilesBySearch,
+  filterWorkspacesBySearch,
+  normalizeSearchQuery,
+} from '@/utils/filterBySearchQuery';
 
 export function WorkSpace() {
   const { workspaces, isLoading, isError, updateWorkspace, deleteWorkspace, togglePin } = useWorkspacesSection();
@@ -15,8 +21,22 @@ export function WorkSpace() {
   const [editWorkspace, setEditWorkspace] = useState<Workspace | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addFiles } = useFileUpload();
+  const { query } = useFileSearch();
+  const isSearching = normalizeSearchQuery(query).length > 0;
 
   const { data: files, isLoading: filesLoading } = useListFilesQuery(undefined);
+
+  const displayedWorkspaces = useMemo(
+    () => (isSearching ? filterWorkspacesBySearch(workspaces, query) : workspaces),
+    [workspaces, query, isSearching],
+  );
+
+  const filteredFiles = useMemo(
+    () => filterIndexedFilesBySearch(files ?? [], query),
+    [files, query],
+  );
+
+  const hasSearchResults = displayedWorkspaces.length > 0 || filteredFiles.length > 0;
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6">
@@ -56,7 +76,7 @@ export function WorkSpace() {
           ? Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />
             ))
-          : workspaces.map((workspace) => (
+          : displayedWorkspaces.map((workspace) => (
               <WorkspaceCard
                 key={workspace.id}
                 workspace={workspace}
@@ -77,17 +97,19 @@ export function WorkSpace() {
               <div key={i} className="h-12 animate-pulse rounded-xl bg-muted" />
             ))}
           </div>
-        ) : !files?.length ? (
+        ) : !files?.length && !isSearching ? (
           <p className="text-sm text-muted-foreground">
             No files indexed yet. Click <strong>Add File</strong> to browse and add files.
           </p>
-        ) : (
+        ) : isSearching && !hasSearchResults ? (
+          <p className="text-sm text-muted-foreground">No files found</p>
+        ) : filteredFiles.length > 0 ? (
           <div className="flex flex-col gap-0.5">
-            {files.map((file) => (
+            {filteredFiles.map((file) => (
               <FileItem key={file._id} file={file} />
             ))}
           </div>
-        )}
+        ) : null}
       </section>
 
       <EditWorkspaceDialog

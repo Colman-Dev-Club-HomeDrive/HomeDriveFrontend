@@ -1,25 +1,47 @@
 import { useMemo } from 'react';
+import { Folder } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useListFilesQuery } from '@/store/apis/files.api';
+import { useListWorkspacesQuery } from '@/store/apis/workspaces.api';
 import { FileItem } from '@/ui/components/FileItem';
+import { useFileSearch } from '@/hooks/useFileSearch';
+import {
+  filterIndexedFilesBySearch,
+  filterWorkspacesBySearch,
+  normalizeSearchQuery,
+} from '@/utils/filterBySearchQuery';
 
 const MAX_RECENT_FILES = 6;
 
 export function RecentFilesSection() {
+  const navigate = useNavigate();
   const { data: files = [], isLoading, isError } = useListFilesQuery(undefined);
+  const { data: workspaces = [] } = useListWorkspacesQuery();
+  const { query } = useFileSearch();
+  const isSearching = normalizeSearchQuery(query).length > 0;
 
-  const recentFiles = useMemo(
-    () =>
-      [...files]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, MAX_RECENT_FILES),
-    [files]
+  const displayedWorkspaces = useMemo(
+    () => (isSearching ? filterWorkspacesBySearch(workspaces, query) : []),
+    [workspaces, query, isSearching],
   );
+
+  const displayedFiles = useMemo(() => {
+    if (isSearching) {
+      return filterIndexedFilesBySearch(files, query);
+    }
+
+    return [...files]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, MAX_RECENT_FILES);
+  }, [files, query, isSearching]);
+
+  const hasSearchResults = displayedWorkspaces.length > 0 || displayedFiles.length > 0;
 
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold">Recently Added Files</h2>
-        {files.length > MAX_RECENT_FILES && (
+        {!isSearching && files.length > MAX_RECENT_FILES && (
           <span className="text-xs text-muted-foreground">Showing latest {MAX_RECENT_FILES}</span>
         )}
       </div>
@@ -35,15 +57,31 @@ export function RecentFilesSection() {
           </div>
         )}
 
-        {!isLoading && recentFiles.length === 0 && (
+        {!isLoading && isSearching && !hasSearchResults && (
+          <p className="px-3 py-4 text-sm text-muted-foreground">No files found</p>
+        )}
+
+        {!isLoading && !isSearching && displayedFiles.length === 0 && (
           <p className="px-3 py-4 text-sm text-muted-foreground">
             No files indexed yet. Add files from Create New to see them here.
           </p>
         )}
 
-        {!isLoading && recentFiles.length > 0 && (
+        {!isLoading && hasSearchResults && (
           <div className="space-y-1">
-            {recentFiles.map((file) => (
+            {displayedWorkspaces.map((workspace) => (
+              <button
+                key={workspace.id}
+                type="button"
+                onClick={() => navigate(`/workspaces/${workspace.id}`)}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-muted"
+              >
+                <Folder className="size-4 shrink-0 text-yellow-500" />
+                <span className="text-sm font-medium">{workspace.name}</span>
+                <span className="text-xs text-muted-foreground">Workspace</span>
+              </button>
+            ))}
+            {displayedFiles.map((file) => (
               <FileItem key={file.id} file={file} />
             ))}
           </div>

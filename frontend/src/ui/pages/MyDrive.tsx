@@ -1,11 +1,17 @@
-import { useRef } from 'react';
-import { FolderSearch } from 'lucide-react';
+import { useRef, useMemo } from 'react';
+import { Folder, FolderSearch } from 'lucide-react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { FileItem } from '@/ui/components/FileItem';
 import { useListFilesQuery } from '@/store/apis/files.api';
 import { useListWorkspacesQuery } from '@/store/apis/workspaces.api';
 import type { MediaType } from '@/types/file.type';
-import { useParams, useSearchParams } from 'react-router-dom';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { useFileSearch } from '@/hooks/useFileSearch';
+import {
+  filterIndexedFilesBySearch,
+  filterWorkspacesBySearch,
+  normalizeSearchQuery,
+} from '@/utils/filterBySearchQuery';
 
 const MEDIA_TYPE_LABELS: Record<MediaType, string> = {
   documents: 'Documents',
@@ -24,19 +30,36 @@ function parseMediaType(value: string | null): MediaType | undefined {
 
 export function MyDrive() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
   const { addFiles } = useFileUpload();
   const [searchParams, setSearchParams] = useSearchParams();
   const { workspaceId } = useParams();
   const mediaType = parseMediaType(searchParams.get('mediaType'));
   const { data: workspaces = [] } = useListWorkspacesQuery();
   const workspace = workspaceId ? workspaces.find((entry) => entry.id === workspaceId) : undefined;
+  const { query } = useFileSearch();
+  const isSearching = normalizeSearchQuery(query).length > 0;
   const { data: files, isLoading, isError } = useListFilesQuery(
-    workspaceId
-      ? { workspaceId, ...(mediaType ? { mediaType } : {}) }
-      : mediaType
-        ? { mediaType }
-        : undefined
+    isSearching
+      ? undefined
+      : workspaceId
+        ? { workspaceId, ...(mediaType ? { mediaType } : {}) }
+        : mediaType
+          ? { mediaType }
+          : undefined
   );
+
+  const filteredWorkspaces = useMemo(
+    () => (isSearching ? filterWorkspacesBySearch(workspaces, query) : []),
+    [workspaces, query, isSearching],
+  );
+
+  const filteredFiles = useMemo(
+    () => filterIndexedFilesBySearch(files ?? [], query),
+    [files, query],
+  );
+
+  const hasSearchResults = filteredWorkspaces.length > 0 || filteredFiles.length > 0;
 
   const clearMediaFilter = () => {
     const nextParams = new URLSearchParams(searchParams);
@@ -95,15 +118,37 @@ export function MyDrive() {
             <div key={i} className="h-12 animate-pulse rounded-xl bg-muted" />
           ))}
         </div>
-      ) : !files?.length ? (
+      ) : !files?.length && !isSearching ? (
         <p className="text-sm text-muted-foreground">
           No files indexed yet. Click <strong>Add File</strong> to browse and add files.
         </p>
+      ) : isSearching && !hasSearchResults ? (
+        <p className="text-sm text-muted-foreground">No files found</p>
       ) : (
-        <div className="flex flex-col gap-0.5">
-          {files.map((file) => (
-            <FileItem key={file._id} file={file} />
-          ))}
+        <div className="flex flex-col gap-4">
+          {isSearching && filteredWorkspaces.length > 0 && (
+            <div className="flex flex-col gap-0.5">
+              {filteredWorkspaces.map((entry) => (
+                <button
+                  key={entry.id}
+                  type="button"
+                  onClick={() => navigate(`/workspaces/${entry.id}`)}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-muted"
+                >
+                  <Folder className="size-4 shrink-0 text-yellow-500" />
+                  <span className="text-sm font-medium">{entry.name}</span>
+                  <span className="text-xs text-muted-foreground">Workspace</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {filteredFiles.length > 0 && (
+            <div className="flex flex-col gap-0.5">
+              {filteredFiles.map((file) => (
+                <FileItem key={file._id} file={file} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
