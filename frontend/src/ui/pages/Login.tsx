@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useLoginMutation } from '@/store/apis/auth.api';
 import { LoginForm, type LoginFormValues } from '../components/LoginForm';
 import type { ApiErrorResponse } from '@/types/auth.type';
@@ -16,6 +16,7 @@ const getLoginErrorMessage = (error: FetchBaseQueryError): string => {
 
 export function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [login, { isLoading }] = useLoginMutation();
   const [errorMessage, setErrorMessage] = useState('');
   const [validationMessage, setValidationMessage] = useState('');
@@ -40,7 +41,9 @@ export function Login() {
         password: values.password,
       }).unwrap();
 
-      navigate('/home');
+      // Redirect to where they were trying to go, or default to /home
+      const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/home';
+      navigate(from, { replace: true });
     } catch (error) {
       if (typeof error === 'object' && error !== null && 'status' in error) {
         setErrorMessage(getLoginErrorMessage(error as FetchBaseQueryError));

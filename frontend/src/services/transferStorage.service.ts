@@ -279,7 +279,7 @@ export async function buildTransferBlob(
   }
 
   const parts = chunks.map((chunk) => chunk.payload.buffer.slice(0));
-  const blob = new Blob(parts);
+  const blob = new Blob(parts.filter((p): p is ArrayBuffer => p instanceof ArrayBuffer));
 
   return {
     blob,

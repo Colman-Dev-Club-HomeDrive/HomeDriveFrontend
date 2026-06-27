@@ -8,19 +8,36 @@ type SocketProviderProps = {
   urls: string[];
 };
 
+function isSocketDebugEnabled(): boolean {
+  try {
+    return localStorage.getItem('debugSockets') === '1' || import.meta.env.DEV;
+  } catch {
+    return import.meta.env.DEV;
+  }
+}
+
+function socketDebugLog(...args: unknown[]) {
+  if (!isSocketDebugEnabled()) return;
+  console.log('[socket-provider]', ...args);
+}
+
 export function SocketProvider({ urls, children }: SocketProviderProps) {
   const [sockets, setSockets] = useState<Record<string, AppSocket>>({});
   const [statuses, setStatuses] = useState<Record<string, SocketStatus>>({});
   const createdRef = useRef<Record<string, AppSocket>>({});
 
   const initSockets = useEffectEvent(() => {
+    const token = localStorage.getItem('token') ?? undefined;
+    socketDebugLog('init', { urls, hasToken: Boolean(token), tokenLength: token?.length ?? 0 });
     const created: Record<string, AppSocket> = {};
     const initialStatus: Record<string, SocketStatus> = {};
     for (const url of urls) {
+      const isSecureSocketUrl = url.startsWith('https://') || url.startsWith('wss://');
       created[url] = io(url, {
+        auth: token ? { token } : undefined,
         transports: ['websocket'],
         withCredentials: true,
-        secure: true,
+        secure: isSecureSocketUrl,
         reconnection: true,
         reconnectionAttempts: Infinity,
         autoConnect: false,
@@ -40,17 +57,24 @@ export function SocketProvider({ urls, children }: SocketProviderProps) {
     for (const [url, socket] of Object.entries(createdRef.current)) {
       socket.on('connect', () => {
         updateStatus(url, 'connected');
-        console.log(`Connected to ${url}`);
+        socketDebugLog('connect', { url, socketId: socket.id, authPresent: Boolean(socket.auth) });
       });
 
-      socket.on('disconnect', () => {
+      socket.on('disconnect', (reason) => {
         updateStatus(url, 'disconnected');
-        console.log(`Disconnected from ${url}`);
+        socketDebugLog('disconnect', { url, socketId: socket.id, reason });
       });
 
       socket.on('connect_error', (error) => {
+        const latestToken = localStorage.getItem('token') ?? undefined;
+        socket.auth = latestToken ? { token: latestToken } : {};
         updateStatus(url, 'error');
-        console.error(`Error connecting to ${url}: ${error}`);
+        socketDebugLog('connect_error', {
+          url,
+          message: error.message,
+          socketId: socket.id,
+          refreshedAuth: Boolean(latestToken),
+        });
       });
     }
 
@@ -58,7 +82,7 @@ export function SocketProvider({ urls, children }: SocketProviderProps) {
     setSockets(created);
     Object.entries(created).forEach(([url, socket]) => {
       socket.connect();
-      console.log(`Connecting to ${url}`);
+      socketDebugLog('connecting', { url, secure: socket.io.opts.secure, hasAuth: Boolean(socket.auth) });
       updateStatus(url, 'connecting');
     });
   });

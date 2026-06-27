@@ -8,11 +8,11 @@ import { Avatar } from '@/ui/components/sidebar/SideBarFooter/Avatar';
 import { AppHeader } from '@/ui/components/AppHeader/AppHeader';
 import { FileUploadProvider } from '@/hooks/useFileUpload';
 import { UploadProgressToast } from '@/ui/components/UploadProgressToast';
-import { VITE_SOCKET_URL } from '@/consts/consts';
+import { SOCKET_BASE_URL } from '@/consts/consts';
 import { TransferNotificationsProvider } from '@/hooks/useTransferNotifications';
 
 function RootLayout() {
-  const socketUrls = useMemo(() => (VITE_SOCKET_URL ? [VITE_SOCKET_URL] : []), []);
+  const socketUrls = useMemo(() => (SOCKET_BASE_URL ? [SOCKET_BASE_URL] : []), []);
 
   return (
     <SocketProvider urls={socketUrls}>

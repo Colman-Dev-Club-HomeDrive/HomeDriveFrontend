@@ -53,24 +53,11 @@ export const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addMatcher(authApi.endpoints.getMe.matchFulfilled, (state, action) => {
-        applyAuthenticatedUser(state, action.payload.user);
-      })
       .addMatcher(authApi.endpoints.login.matchFulfilled, (state, action) => {
         applyAuthenticatedUser(state, action.payload.user);
       })
       .addMatcher(authApi.endpoints.register.matchFulfilled, (state, action) => {
         applyAuthenticatedUser(state, action.payload.user);
-      })
-      .addMatcher(authApi.endpoints.getMe.matchRejected, (state, action) => {
-        const status = action.payload?.status;
-        if (status === 401 || status === 403) {
-          state.id = '';
-          state.name = '';
-          state.email = '';
-          state.isAuthenticated = false;
-        }
-        state.isAuthChecked = true;
       })
       .addMatcher(authApi.endpoints.logout.matchFulfilled, (state) => {
         state.id = '';

@@ -21,11 +21,13 @@ export type MeResponse = {
 
 export type LoginResponse = {
   success?: boolean;
+  token: string;
   user: AuthUser;
 };
 
 export type RegisterResponse = {
   success?: boolean;
+  token: string;
   user: AuthUser;
 };
 

@@ -1,11 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { StorageCard } from '@/ui/components/StorageCard';
 import { MediaTypesCard } from '@/ui/components/MediaTypesCard';
 import { CreateNewCard } from '@/ui/components/CreateNewCard';
 import { WorkspacesSection } from '@/ui/components/ActionMenu/WorkspacesSection';
-import { FileBrowserModal } from '@/ui/components/FileBrowserModal';
 import { useAppSelector } from '@/store/hooks';
-import { useGetMeQuery } from '@/store/apis/auth.api';
 import { useGetStorageStatsQuery, useListFilesQuery } from '@/store/apis/files.api';
 import { selectUser } from '@/store/slices/user.slice';
 import { getGreeting } from '@/utils/getGreeting';
@@ -16,7 +14,6 @@ import { RecentFilesSection } from '@/ui/components/RecentFilesSection';
 
 export function Home() {
   const { handleDragEnter, handleDragLeave, handleDrop } = useFileUpload();
-  const { data: meData } = useGetMeQuery();
   const { data: filesData, isLoading: isFilesLoading } = useListFilesQuery(undefined);
   const {
     data: storageStats,
@@ -24,8 +21,7 @@ export function Home() {
     isError: isStorageError,
   } = useGetStorageStatsQuery();
   const { name: storeName } = useAppSelector(selectUser);
-  const userName = meData?.user?.name || storeName;
-  const [fileBrowserOpen, setFileBrowserOpen] = useState(false);
+  const userName = storeName;
 
   const metadataUsedBytes = useMemo(
     () =>
@@ -78,15 +74,10 @@ export function Home() {
           />
           <MediaTypesCard />
         </div>
-        <CreateNewCard
-          onIndexFile={() => setFileBrowserOpen(true)}
-          onIndexFolder={() => setFileBrowserOpen(true)}
-        />
+        <CreateNewCard />
       </div>
       <WorkspacesSection />
       <RecentFilesSection />
-
-      <FileBrowserModal open={fileBrowserOpen} onOpenChange={setFileBrowserOpen} />
     </div>
   );
 }

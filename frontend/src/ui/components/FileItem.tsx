@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { File, FileText, Image, Video, Music, Folder, Trash2, Loader2, Pencil, MoreHorizontal, Download } from 'lucide-react';
-import { useDeleteFileMutation, useOpenFileMutation, useRenameFileMutation } from '@/store/apis/files.api';
-import { VITE_API_URL } from '@/consts/consts';
+import { useDeleteFileMutation, useRenameFileMutation } from '@/store/apis/files.api';
+import { API_BASE_URL } from '@/consts/consts';
 import { RenameFileDialog } from '@/ui/components/RenameFileDialog';
 import { formatSize } from '@/utils/formatSize';
 import type { IndexedFile } from '@/types/file.type';
@@ -28,7 +28,7 @@ function getMimeIcon(file: IndexedFile) {
 
 export function FileItem({ file }: FileItemProps) {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
-  const [openFile, { isLoading: isOpening }] = useOpenFileMutation();
+  const [isOpening, setIsOpening] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [deleteFile, { isLoading: isDeleting }] = useDeleteFileMutation();
   const [renameFile, { isLoading: isRenaming }] = useRenameFileMutation();
@@ -46,19 +46,48 @@ export function FileItem({ file }: FileItemProps) {
   }
 
   async function handleOpenAction() {
+    if (file.isDirectory) return;
+
     try {
-      await openFile(fileId).unwrap();
+      setIsOpening(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/files/${fileId}/download`, {
+        credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+
+      if (!response.ok) throw new Error('Open failed');
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const openedWindow = window.open(objectUrl, '_blank', 'noopener,noreferrer');
+
+      // Pop-up blockers can prevent window.open; fallback to a synthetic anchor click.
+      if (!openedWindow) {
+        const anchor = document.createElement('a');
+        anchor.href = objectUrl;
+        anchor.target = '_blank';
+        anchor.rel = 'noopener noreferrer';
+        anchor.click();
+      }
+
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
     } catch (error) {
       console.error('❌ Failed to open file:', error);
+    } finally {
+      setIsOpening(false);
     }
   }
 
   async function handleDownloadAction() {
     try {
       setIsDownloading(true);
-      const response = await fetch(`${VITE_API_URL || '/api'}/files/${fileId}/download`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/files/${fileId}/download`, {
         credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
+
       if (!response.ok) throw new Error('Download failed');
       const blob = await response.blob();
       const objectUrl = URL.createObjectURL(blob);
@@ -80,9 +109,9 @@ export function FileItem({ file }: FileItemProps) {
         type="button"
         className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1 py-1 text-left disabled:pointer-events-none disabled:opacity-60"
         onClick={handleOpenAction}
-        disabled={isOpening}
+        disabled={isOpening || file.isDirectory}
         aria-label={file.isDirectory ? `Open folder ${file.name}` : `Open ${file.name}`}
-        title={file.isDirectory ? 'Open in file explorer' : 'Open with default app'}
+        title={file.isDirectory ? 'Folders cannot be opened in browser' : 'Open in browser'}
       >
         <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
           {isOpening ? (

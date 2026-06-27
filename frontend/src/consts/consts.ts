@@ -2,9 +2,35 @@ import type { Workspace, WorkspaceIcon } from '@/types/workspace.type';
 import type { MediaType } from '@/types/file.type';
 import { Home, Triangle, Users, Link2, Star, BarChart2, Trash2, FolderPlus, Upload, Image, Video, Music, Folder, FileText, Code2 } from 'lucide-react';
 
+const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1']);
+
+function isLocalAddressUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return LOCAL_HOSTNAMES.has(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function isCurrentHostLocal(): boolean {
+  if (typeof window === 'undefined') return false;
+  return LOCAL_HOSTNAMES.has(window.location.hostname);
+}
+
+function resolveNetworkUrl(candidate: string | undefined, fallback: string): string {
+  if (!candidate) return fallback;
+  if (!isCurrentHostLocal() && isLocalAddressUrl(candidate)) {
+    // Prevent public/https pages from calling localhost (blocked by browser PNA/CORS rules).
+    return fallback;
+  }
+  return candidate;
+}
+
 export const VITE_API_URL = import.meta.env.VITE_API_URL as string;
 export const VITE_SOCKET_URL = import.meta.env.VITE_SOCKET_URL as string;
-export const POKE_API_URL = `https://pokeapi.co/api/v2`;
+export const API_BASE_URL = resolveNetworkUrl(VITE_API_URL, '/api');
+export const SOCKET_BASE_URL = resolveNetworkUrl(VITE_SOCKET_URL, typeof window !== 'undefined' ? window.location.origin : '');
 
 export const NAV_ITEMS = [
   { to: '/home', icon: Home, label: 'Home' },
