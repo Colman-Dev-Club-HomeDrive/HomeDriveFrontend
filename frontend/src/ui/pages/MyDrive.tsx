@@ -12,6 +12,8 @@ import {
   filterWorkspacesBySearch,
   normalizeSearchQuery,
 } from '@/utils/filterBySearchQuery';
+import { WorkspaceViewTabs, type WorkspaceViewTab } from '@/ui/components/workspace/WorkspaceViewTabs';
+import { WorkspaceCodeEditor } from '@/ui/components/workspace/WorkspaceCodeEditor';
 
 const MEDIA_TYPE_LABELS: Record<MediaType, string> = {
   documents: 'Documents',
@@ -28,6 +30,10 @@ function parseMediaType(value: string | null): MediaType | undefined {
   return undefined;
 }
 
+function parseWorkspaceTab(value: string | null): WorkspaceViewTab {
+  return value === 'code' ? 'code' : 'files';
+}
+
 export function MyDrive() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -37,6 +43,7 @@ export function MyDrive() {
   const mediaType = parseMediaType(searchParams.get('mediaType'));
   const { data: workspaces = [] } = useListWorkspacesQuery();
   const workspace = workspaceId ? workspaces.find((entry) => entry.id === workspaceId) : undefined;
+  const activeTab = workspaceId ? parseWorkspaceTab(searchParams.get('tab')) : 'files';
   const { query } = useFileSearch();
   const isSearching = normalizeSearchQuery(query).length > 0;
   const { data: files, isLoading, isError } = useListFilesQuery(
@@ -64,6 +71,16 @@ export function MyDrive() {
   const clearMediaFilter = () => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('mediaType');
+    setSearchParams(nextParams);
+  };
+
+  const setActiveTab = (tab: WorkspaceViewTab) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (tab === 'files') {
+      nextParams.delete('tab');
+    } else {
+      nextParams.set('tab', 'code');
+    }
     setSearchParams(nextParams);
   };
 
@@ -99,6 +116,14 @@ export function MyDrive() {
         </button>
       </div>
 
+      {workspaceId && workspace && (
+        <WorkspaceViewTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      )}
+
+      {workspaceId && workspace && activeTab === 'code' ? (
+        <WorkspaceCodeEditor workspaceId={workspaceId} workspaceName={workspace.name} />
+      ) : (
+        <>
       <input
         ref={fileInputRef}
         type="file"
@@ -150,6 +175,8 @@ export function MyDrive() {
             </div>
           )}
         </div>
+      )}
+        </>
       )}
     </div>
   );
