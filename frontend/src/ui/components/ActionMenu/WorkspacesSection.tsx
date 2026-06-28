@@ -28,6 +28,18 @@ export function WorkspacesSection() {
     navigate(`/workspaces/${workspaceId}`);
   };
 
+  const handleShareWorkspace = (workspace: (typeof workspaces)[number]) => {
+    setEditWorkspace(workspace);
+  };
+
+  const handleDeleteWorkspace = (workspace: (typeof workspaces)[number]) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${workspace.name}"? This action cannot be undone.`
+    );
+    if (!confirmed) return;
+    deleteWorkspace(workspace.id);
+  };
+
   return (
     <>
       <section className="flex flex-col gap-4">
@@ -62,6 +74,8 @@ export function WorkspacesSection() {
                   onOpen={() => openWorkspace(workspace.id)}
                   onTogglePin={togglePin}
                   onEdit={setEditWorkspace}
+                  onShare={handleShareWorkspace}
+                  onDelete={handleDeleteWorkspace}
                   onDownload={() => navigate('/workspaces')}
                 />
               ))}

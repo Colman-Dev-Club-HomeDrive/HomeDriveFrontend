@@ -97,6 +97,15 @@ export const filesApi = createApi({
       }),
       invalidatesTags: ['File'],
     }),
+
+    shareFile: builder.mutation<IndexedFile, { id: string; shareWith: string }>({
+      query: ({ id, shareWith }) => ({
+        url: `/files/${id}/share`,
+        method: 'PATCH',
+        body: { shareWith },
+      }),
+      invalidatesTags: ['File'],
+    }),
   }),
 });
 
@@ -108,4 +117,5 @@ export const {
   useIndexFileMutation,
   useDeleteFileMutation,
   useRenameFileMutation,
+  useShareFileMutation,
 } = filesApi;
