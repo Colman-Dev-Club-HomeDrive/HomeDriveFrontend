@@ -5,17 +5,30 @@ import { useListFilesQuery } from '@/store/apis/files.api';
 import { useListWorkspacesQuery } from '@/store/apis/workspaces.api';
 import { FileItem } from '@/ui/components/FileItem';
 import { useFileSearch } from '@/hooks/useFileSearch';
+import { useAppSelector } from '@/store/hooks';
+import { selectUser } from '@/store/slices/user.slice';
+import { useListAccessUsersQuery } from '@/store/apis/access.api';
 import {
   filterIndexedFilesBySearch,
   filterWorkspacesBySearch,
   normalizeSearchQuery,
 } from '@/utils/filterBySearchQuery';
 import { getWorkspacePath } from '@/utils/workspaceNavigation';
+import { TEMP_ALLOWED_EMAILS } from '@/consts/consts';
+
+const DEFAULT_ACCESS_USERS = TEMP_ALLOWED_EMAILS.map((email) => ({ email, role: 'manager' as const }));
 
 const MAX_RECENT_FILES = 6;
 
 export function RecentFilesSection() {
   const navigate = useNavigate();
+  const { email: userEmail } = useAppSelector(selectUser);
+  const normalizedUserEmail = (userEmail ?? '').trim().toLowerCase();
+  const { data: sharedAccessUsers = DEFAULT_ACCESS_USERS } = useListAccessUsersQuery();
+  const currentUserAccess = sharedAccessUsers.find((entry) => entry.email === normalizedUserEmail);
+  const canSeeSharedInfo = Boolean(currentUserAccess);
+  const canDownloadFiles = Boolean(currentUserAccess);
+  const canWriteFiles = currentUserAccess?.role === 'manager' || currentUserAccess?.role === 'editor';
   const { data: files = [], isLoading, isError } = useListFilesQuery(undefined);
   const { data: workspaces = [] } = useListWorkspacesQuery();
   const { query } = useFileSearch();
@@ -50,6 +63,12 @@ export function RecentFilesSection() {
       {isError && <p className="text-xs text-destructive">Failed to load recent files.</p>}
 
       <div className="rounded-2xl border border-slate-200 bg-white p-2 text-slate-900 shadow-sm">
+        {!canSeeSharedInfo && (
+          <p className="px-3 py-4 text-sm text-muted-foreground">
+            Access to shared files is temporarily limited for this account.
+          </p>
+        )}
+
         {isLoading && (
           <div className="space-y-2 p-1">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -58,17 +77,17 @@ export function RecentFilesSection() {
           </div>
         )}
 
-        {!isLoading && isSearching && !hasSearchResults && (
+        {canSeeSharedInfo && !isLoading && isSearching && !hasSearchResults && (
           <p className="px-3 py-4 text-sm text-muted-foreground">No files found</p>
         )}
 
-        {!isLoading && !isSearching && displayedFiles.length === 0 && (
+        {canSeeSharedInfo && !isLoading && !isSearching && displayedFiles.length === 0 && (
           <p className="px-3 py-4 text-sm text-muted-foreground">
             No files indexed yet. Add files from Create New to see them here.
           </p>
         )}
 
-        {!isLoading && hasSearchResults && (
+        {canSeeSharedInfo && !isLoading && hasSearchResults && (
           <div className="space-y-1">
             {displayedWorkspaces.map((workspace) => (
               <button
@@ -83,7 +102,7 @@ export function RecentFilesSection() {
               </button>
             ))}
             {displayedFiles.map((file) => (
-              <FileItem key={file.id} file={file} />
+              <FileItem key={file.id} file={file} canDownload={canDownloadFiles} canWrite={canWriteFiles} />
             ))}
           </div>
         )}

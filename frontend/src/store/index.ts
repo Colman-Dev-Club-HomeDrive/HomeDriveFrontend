@@ -4,6 +4,7 @@ import { authApi } from './apis/auth.api';
 import { usersApi } from './apis/users.api';
 import { workspacesApi } from './apis/workspaces.api';
 import { filesApi } from './apis/files.api';
+import { accessApi } from './apis/access.api';
 import { setupListeners } from '@reduxjs/toolkit/query/react';
 
 export const store = configureStore({
@@ -13,6 +14,7 @@ export const store = configureStore({
     [usersApi.reducerPath]: usersApi.reducer,
     [workspacesApi.reducerPath]: workspacesApi.reducer,
     [filesApi.reducerPath]: filesApi.reducer,
+    [accessApi.reducerPath]: accessApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
 
@@ -20,7 +22,8 @@ export const store = configureStore({
       authApi.middleware,
       usersApi.middleware,
       workspacesApi.middleware,
-      filesApi.middleware
+      filesApi.middleware,
+      accessApi.middleware
     ),
 
 });

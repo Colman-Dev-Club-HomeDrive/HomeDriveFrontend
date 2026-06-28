@@ -1,4 +1,5 @@
 import { Home } from '@/ui/pages/Home';
+import { AccessAdmin } from '@/ui/pages/AccessAdmin';
 import { Login } from '@/ui/pages/Login';
 import { MyDrive } from '@/ui/pages/MyDrive';
 import { NotFound } from '@/ui/pages/NotFound';
@@ -67,6 +68,11 @@ export const router = createBrowserRouter([
       {
         path: '/trash',
         Component: Trash,
+        loader: requireAuth,
+      },
+      {
+        path: '/admin/access',
+        Component: AccessAdmin,
         loader: requireAuth,
       },
       {

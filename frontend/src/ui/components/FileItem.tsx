@@ -19,6 +19,8 @@ type FileItemProps = {
   file: IndexedFile;
   onOpenFolder?: (file: IndexedFile) => void;
   disableActions?: boolean;
+  canDownload?: boolean;
+  canWrite?: boolean;
 };
 
 function getMimeIcon(file: IndexedFile) {
@@ -31,7 +33,7 @@ function getMimeIcon(file: IndexedFile) {
   return File;
 }
 
-export function FileItem({ file, onOpenFolder, disableActions = false }: FileItemProps) {
+export function FileItem({ file, onOpenFolder, disableActions = false, canDownload = true, canWrite = true }: FileItemProps) {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
@@ -54,6 +56,15 @@ export function FileItem({ file, onOpenFolder, disableActions = false }: FileIte
   }
 
   async function handleOpenAction() {
+    if (file.isDirectory) {
+      onOpenFolder?.(file);
+      return;
+    }
+
+    if (!canDownload) {
+      return;
+    }
+
     try {
       setIsOpening(true);
       await openIndexedFile(file, onOpenFolder);
@@ -100,9 +111,15 @@ export function FileItem({ file, onOpenFolder, disableActions = false }: FileIte
         type="button"
         className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1 py-1 text-left disabled:pointer-events-none disabled:opacity-60"
         onClick={handleOpenAction}
-        disabled={isOpening || (file.isDirectory && !onOpenFolder)}
+        disabled={isOpening || (file.isDirectory && !onOpenFolder) || (!file.isDirectory && !canDownload)}
         aria-label={file.isDirectory ? `Open folder ${file.name}` : `Open ${file.name}`}
-        title={file.isDirectory ? (onOpenFolder ? 'Open folder' : 'Folders cannot be opened in browser') : 'Open file'}
+        title={
+          file.isDirectory
+            ? (onOpenFolder ? 'Open folder' : 'Folders cannot be opened in browser')
+            : canDownload
+              ? 'Open in browser'
+              : 'Download access required'
+        }
       >
         <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
           {isOpening ? (
@@ -138,25 +155,31 @@ export function FileItem({ file, onOpenFolder, disableActions = false }: FileIte
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setRenameDialogOpen(true)}>
-            <Pencil className="size-4" />
-            Rename
-          </DropdownMenuItem>
+          {canWrite && (
+            <DropdownMenuItem onClick={() => setRenameDialogOpen(true)}>
+              <Pencil className="size-4" />
+              Rename
+            </DropdownMenuItem>
+          )}
 
-          <DropdownMenuItem onClick={handleDownloadAction} disabled={file.isDirectory || isDownloading}>
+          <DropdownMenuItem onClick={handleDownloadAction} disabled={file.isDirectory || isDownloading || !canDownload}>
             {isDownloading ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
             Download
           </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={handleShareAction} disabled={file.isDirectory || isSharing}>
-            {isSharing ? <Loader2 className="size-4 animate-spin" /> : <Share2 className="size-4" />}
-            Share
-          </DropdownMenuItem>
+          {canWrite && (
+            <DropdownMenuItem onClick={handleShareAction} disabled={file.isDirectory || isSharing}>
+              {isSharing ? <Loader2 className="size-4 animate-spin" /> : <Share2 className="size-4" />}
+              Share
+            </DropdownMenuItem>
+          )}
 
-          <DropdownMenuItem variant="destructive" onClick={() => deleteFile(fileId)}>
-            {isDeleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-            Delete
-          </DropdownMenuItem>
+          {canWrite && (
+            <DropdownMenuItem variant="destructive" onClick={() => deleteFile(fileId)}>
+              {isDeleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+              Delete
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       )}

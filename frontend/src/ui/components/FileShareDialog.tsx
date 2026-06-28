@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Copy, Loader2, Lock, Plus } from 'lucide-react';
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ export function FileShareDialog({
   const [newCollaborator, setNewCollaborator] = useState('');
   const [collaborators, setCollaborators] = useState<CollaboratorAccess[]>([]);
   const [updatingEmail, setUpdatingEmail] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
   const [isCopying, setIsCopying] = useState(false);
   const [copied, setCopied] = useState(false);
   const dialogStateRef = useRef({ open: false, fileId: '' });
@@ -103,11 +105,33 @@ export function FileShareDialog({
   };
 
   const removeCollaborator = (email: string) => {
+    setErrorMessage('');
     setCollaborators((prev) => prev.filter((collaborator) => collaborator.email !== email));
+  };
+
+  const getApiErrorMessage = (error: unknown, fallback: string): string => {
+    if (typeof error === 'object' && error !== null && 'data' in error) {
+      const data = (error as FetchBaseQueryError).data;
+      if (
+        typeof data === 'object' &&
+        data !== null &&
+        'message' in data &&
+        typeof (data as { message?: unknown }).message === 'string'
+      ) {
+        return (data as { message: string }).message;
+      }
+    }
+
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+
+    return fallback;
   };
 
   const handlePermissionChange = async (email: string, permission: SharePermission) => {
     if (!file || !isOwner) return;
+    setErrorMessage('');
 
     const previousCollaborators = collaborators;
     const nextCollaborators = collaborators.map((collaborator) =>
@@ -125,7 +149,7 @@ export function FileShareDialog({
       setCollaborators(parseCollaboration(updated.collaboration));
     } catch (error) {
       setCollaborators(previousCollaborators);
-      console.error('failed to update file share permission:', error);
+      setErrorMessage(getApiErrorMessage(error, 'Failed to update collaborator permission.'));
     } finally {
       setUpdatingEmail(null);
     }
@@ -148,13 +172,14 @@ export function FileShareDialog({
 
   const handleSave = async () => {
     if (!file) return;
+    setErrorMessage('');
 
     const nextValue = serializeCollaboration(collaborators);
     try {
       await onSaveCollaborators(nextValue);
       onOpenChange(false);
     } catch (error) {
-      console.error('failed to save file collaborators:', error);
+      setErrorMessage(getApiErrorMessage(error, 'Failed to save collaborators.'));
     }
   };
 
@@ -196,6 +221,7 @@ export function FileShareDialog({
                   Add
                 </button>
               </div>
+              {errorMessage && <p className="text-xs text-destructive">{errorMessage}</p>}
             </div>
           )}
 
@@ -210,6 +236,8 @@ export function FileShareDialog({
               onRemove={isOwner ? removeCollaborator : undefined}
             />
           </div>
+
+          {errorMessage && <p className="text-xs text-destructive">{errorMessage}</p>}
 
           <div className="space-y-2 rounded-lg border border-slate-200 p-3">
             <p className="text-base font-semibold text-slate-900">General access</p>
@@ -244,7 +272,8 @@ export function FileShareDialog({
                 type="button"
                 onClick={handleSave}
                 disabled={isLoading}
-                className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:opacity-50"
+                style={{ backgroundColor: 'var(--color-dark-card)' }}
               >
                 {isLoading ? <Loader2 className="size-4 animate-spin" /> : null}
                 Done
