@@ -37,6 +37,7 @@ function normalizeFileNode(node: Partial<CodeFileNode>): CodeFileNode | null {
     type: 'file',
     content: typeof node.content === 'string' ? node.content : '',
     language: node.language ?? inferLanguageFromFileName(name),
+    indexedFileId: node.indexedFileId,
   };
 }
 
@@ -72,6 +73,75 @@ export function findNode(nodes: CodeFileNode[], id: string): CodeFileNode | null
     }
   }
   return null;
+}
+
+export function findNodeByIndexedFileId(nodes: CodeFileNode[], indexedFileId: string): CodeFileNode | null {
+  for (const node of nodes) {
+    if (node.type === 'file' && node.indexedFileId === indexedFileId) return node;
+    if (node.type === 'folder' && node.children) {
+      const found = findNodeByIndexedFileId(node.children, indexedFileId);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function findRootFileByName(nodes: CodeFileNode[], name: string): CodeFileNode | null {
+  const normalizedName = name.toLowerCase();
+  return (
+    nodes.find(
+      (node) => node.type === 'file' && node.name.toLowerCase() === normalizedName,
+    ) ?? null
+  );
+}
+
+export function upsertIndexedFileNode(
+  files: CodeFileNode[],
+  indexedFileId: string,
+  name: string,
+  content: string,
+): { files: CodeFileNode[]; fileId: string } {
+  const sanitizedName = sanitizeNodeName(name) || 'untitled.txt';
+  const language = inferLanguageFromFileName(sanitizedName);
+  const existing = findNodeByIndexedFileId(files, indexedFileId);
+
+  if (existing) {
+    return {
+      files: updateNode(files, existing.id, (node) => ({
+        ...node,
+        name: sanitizedName,
+        content,
+        language,
+        indexedFileId,
+      })),
+      fileId: existing.id,
+    };
+  }
+
+  const existingByName = findRootFileByName(files, sanitizedName);
+  if (existingByName) {
+    return {
+      files: updateNode(files, existingByName.id, (node) => ({
+        ...node,
+        name: sanitizedName,
+        content,
+        language,
+        indexedFileId,
+      })),
+      fileId: existingByName.id,
+    };
+  }
+
+  const { files: nextFiles, fileId } = createFileNode(files, null, sanitizedName);
+  return {
+    files: updateNode(nextFiles, fileId, (node) => ({
+      ...node,
+      content,
+      language,
+      indexedFileId,
+    })),
+    fileId,
+  };
 }
 
 export function findParentId(nodes: CodeFileNode[], id: string, parentId: string | null = null): string | null {
