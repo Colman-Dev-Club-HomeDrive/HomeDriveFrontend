@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithAuth } from './baseQuery';
 import type { CreateWorkspaceFormValues, EditWorkspaceFormValues, Workspace } from '@/types/workspace.type';
+import type { SharePermission } from '@/types/share.type';
 
 export const workspacesApi = createApi({
   reducerPath: 'workspacesApi',
@@ -94,6 +95,32 @@ export const workspacesApi = createApi({
         }
       },
     }),
+
+    updateWorkspaceSharePermission: builder.mutation<
+      Workspace,
+      { id: string; email: string; permission: SharePermission }
+    >({
+      query: ({ id, email, permission }) => ({
+        url: `/workspaces/${id}/share/permission`,
+        method: 'PATCH',
+        body: { email, permission },
+      }),
+      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
+        try {
+          const { data: updated } = await queryFulfilled;
+          dispatch(
+            workspacesApi.util.updateQueryData('listWorkspaces', undefined, (draft) => {
+              const workspace = draft.find((entry) => entry.id === id);
+              if (workspace) {
+                Object.assign(workspace, updated);
+              }
+            }),
+          );
+        } catch {
+          // No optimistic update to undo.
+        }
+      },
+    }),
   }),
 });
 
@@ -103,4 +130,5 @@ export const {
   useUpdateWorkspaceMutation,
   useDeleteWorkspaceMutation,
   useReorderWorkspacesMutation,
+  useUpdateWorkspaceSharePermissionMutation,
 } = workspacesApi;

@@ -4,6 +4,7 @@ import { useListWorkspacesQuery } from '@/store/apis/workspaces.api';
 import { useAppSelector } from '@/store/hooks';
 import { selectUser } from '@/store/slices/user.slice';
 import { useTransferNotifications } from '@/hooks/useTransferNotifications';
+import { parseCollaboratorEmails } from '@/utils/collaboration';
 
 type BaseNotification = {
   id: string;
@@ -28,15 +29,6 @@ function normalize(value: string): string {
   return value.trim().toLowerCase();
 }
 
-function parseCollaborators(value?: string): string[] {
-  if (!value) return [];
-
-  return value
-    .split(',')
-    .map((item) => normalize(item))
-    .filter(Boolean);
-}
-
 function buildCurrentUserMarkers(userId: string, userName: string, userEmail: string) {
   return new Set(
     [userId, userName, userEmail]
@@ -48,7 +40,7 @@ function buildCurrentUserMarkers(userId: string, userName: string, userEmail: st
 function isSharedWithCurrentUser(collaboration: string | undefined, currentUserMarkers: Set<string>) {
   if (currentUserMarkers.size === 0) return false;
 
-  return parseCollaborators(collaboration).some((collaborator) => currentUserMarkers.has(collaborator));
+  return parseCollaboratorEmails(collaboration).some((collaborator) => currentUserMarkers.has(collaborator));
 }
 
 export function useAppNotifications() {

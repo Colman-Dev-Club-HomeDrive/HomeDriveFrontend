@@ -3,9 +3,11 @@ import { FolderSearch } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { WorkspaceCard } from '@/ui/components/WorkspaceCard';
 import { EditWorkspaceDialog } from '@/ui/components/ActionMenu/EditWorkspaceDialog';
+import { WorkspaceShareDialog } from '@/ui/components/WorkspaceShareDialog';
 import { FileItem } from '@/ui/components/FileItem';
 import { useWorkspacesSection } from '@/hooks/useWorkspacesSection';
 import { useListFilesQuery } from '@/store/apis/files.api';
+import { useUpdateWorkspaceMutation } from '@/store/apis/workspaces.api';
 import type { Workspace } from '@/types/workspace.type';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useFileSearch } from '@/hooks/useFileSearch';
@@ -19,6 +21,8 @@ export function WorkSpace() {
   const { workspaces, isLoading, isError, updateWorkspace, deleteWorkspace, togglePin } = useWorkspacesSection();
   const navigate = useNavigate();
   const [editWorkspace, setEditWorkspace] = useState<Workspace | null>(null);
+  const [shareWorkspace, setShareWorkspace] = useState<Workspace | null>(null);
+  const [updateWorkspaceMutation, { isLoading: isSharingWorkspace }] = useUpdateWorkspaceMutation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addFiles } = useFileUpload();
   const { query } = useFileSearch();
@@ -37,6 +41,26 @@ export function WorkSpace() {
   );
 
   const hasSearchResults = displayedWorkspaces.length > 0 || filteredFiles.length > 0;
+
+  const handleShareWorkspace = (workspace: Workspace) => {
+    setShareWorkspace(workspace);
+  };
+
+  const handleDeleteWorkspace = (workspace: Workspace) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${workspace.name}"? This action cannot be undone.`,
+    );
+    if (!confirmed) return;
+    deleteWorkspace(workspace.id);
+  };
+
+  const handleSaveWorkspaceCollaborators = async (shareWith: string) => {
+    if (!shareWorkspace) return;
+    await updateWorkspaceMutation({
+      id: shareWorkspace.id,
+      values: { collaboration: shareWith },
+    }).unwrap();
+  };
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6">
@@ -83,6 +107,8 @@ export function WorkSpace() {
                 onOpen={() => navigate(`/workspaces/${workspace.id}`)}
                 onTogglePin={togglePin}
                 onEdit={setEditWorkspace}
+                onShare={handleShareWorkspace}
+                onDelete={handleDeleteWorkspace}
                 onDownload={() => {}}
               />
             ))}
@@ -118,6 +144,14 @@ export function WorkSpace() {
         onOpenChange={(open) => { if (!open) setEditWorkspace(null); }}
         onSubmit={(id, values) => { updateWorkspace(id, values); setEditWorkspace(null); }}
         onDelete={(id) => { deleteWorkspace(id); setEditWorkspace(null); }}
+      />
+
+      <WorkspaceShareDialog
+        workspace={shareWorkspace}
+        open={shareWorkspace !== null}
+        onOpenChange={(open) => { if (!open) setShareWorkspace(null); }}
+        onSaveCollaborators={handleSaveWorkspaceCollaborators}
+        isLoading={isSharingWorkspace}
       />
     </div>
   );
