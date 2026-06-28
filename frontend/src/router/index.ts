@@ -3,6 +3,7 @@ import { Login } from '@/ui/pages/Login';
 import { MyDrive } from '@/ui/pages/MyDrive';
 import { NotFound } from '@/ui/pages/NotFound';
 import { Stats } from '@/ui/pages/Stats';
+import { Trash } from '@/ui/pages/Trash';
 import { WorkSpace } from '@/ui/pages/WorkSpace';
 import { Root } from '@/ui/Root';
 import { SignUp } from '@/ui/pages/SignUp';
@@ -60,6 +61,11 @@ export const router = createBrowserRouter([
       {
         path: '/stats',
         Component: Stats,
+        loader: requireAuth,
+      },
+      {
+        path: '/trash',
+        Component: Trash,
         loader: requireAuth,
       },
     ]
