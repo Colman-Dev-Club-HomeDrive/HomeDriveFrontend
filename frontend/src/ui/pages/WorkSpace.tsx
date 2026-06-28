@@ -17,10 +17,24 @@ import {
   normalizeSearchQuery,
 } from '@/utils/filterBySearchQuery';
 import { getWorkspacePath } from '@/utils/workspaceNavigation';
+import { useAppSelector } from '@/store/hooks';
+import { selectUser } from '@/store/slices/user.slice';
+import { TEMP_ALLOWED_EMAILS } from '@/consts/consts';
+import { useListAccessUsersQuery } from '@/store/apis/access.api';
+
+const DEFAULT_ACCESS_USERS = TEMP_ALLOWED_EMAILS.map((email) => ({ email, role: 'manager' as const }));
 
 export function WorkSpace() {
   const { workspaces, isLoading, isError, updateWorkspace, deleteWorkspace, togglePin } = useWorkspacesSection();
   const navigate = useNavigate();
+  const { email: userEmail } = useAppSelector(selectUser);
+  const normalizedUserEmail = (userEmail ?? '').trim().toLowerCase();
+  const { data: sharedAccessUsers = DEFAULT_ACCESS_USERS } = useListAccessUsersQuery();
+  const currentUserAccess = sharedAccessUsers.find((entry) => entry.email === normalizedUserEmail);
+  const canSeeSharedInfo = Boolean(currentUserAccess);
+  const canUploadFiles = currentUserAccess?.role === 'manager' || currentUserAccess?.role === 'editor';
+  const canDownloadFiles = Boolean(currentUserAccess);
+  const canWriteFiles = currentUserAccess?.role === 'manager' || currentUserAccess?.role === 'editor';
   const [editWorkspace, setEditWorkspace] = useState<Workspace | null>(null);
   const [shareWorkspace, setShareWorkspace] = useState<Workspace | null>(null);
   const [updateWorkspaceMutation, { isLoading: isSharingWorkspace }] = useUpdateWorkspaceMutation();
@@ -72,14 +86,22 @@ export function WorkSpace() {
             {isLoading ? 'Loading…' : `${workspaces.length} workspace${workspaces.length !== 1 ? 's' : ''}`}
           </p>
         </div>
-        <button
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <FolderSearch className="size-4" />
-          Add File
-        </button>
+        {canUploadFiles && (
+          <button
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <FolderSearch className="size-4" />
+            Add File
+          </button>
+        )}
       </div>
+
+      {!canSeeSharedInfo && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Access to workspaces and indexed files is temporarily limited for this account.
+        </div>
+      )}
 
       <input
         ref={fileInputRef}
@@ -101,7 +123,7 @@ export function WorkSpace() {
           ? Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />
             ))
-          : displayedWorkspaces.map((workspace) => (
+          : canSeeSharedInfo && displayedWorkspaces.map((workspace) => (
               <WorkspaceCard
                 key={workspace.id}
                 workspace={workspace}
@@ -111,6 +133,7 @@ export function WorkSpace() {
                 onShare={handleShareWorkspace}
                 onDelete={handleDeleteWorkspace}
                 onDownload={() => {}}
+                canWrite={canWriteFiles}
               />
             ))}
       </div>
@@ -118,7 +141,9 @@ export function WorkSpace() {
       {/* Indexed files list */}
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Indexed Files</h2>
-        {filesLoading ? (
+        {!canSeeSharedInfo ? (
+          <p className="text-sm text-muted-foreground">No files available for this account right now.</p>
+        ) : filesLoading ? (
           <div className="flex flex-col gap-1">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-12 animate-pulse rounded-xl bg-muted" />
@@ -133,7 +158,7 @@ export function WorkSpace() {
         ) : filteredFiles.length > 0 ? (
           <div className="flex flex-col gap-0.5">
             {filteredFiles.map((file) => (
-              <FileItem key={file._id} file={file} />
+              <FileItem key={file._id} file={file} canDownload={canDownloadFiles} canWrite={canWriteFiles} />
             ))}
           </div>
         ) : null}

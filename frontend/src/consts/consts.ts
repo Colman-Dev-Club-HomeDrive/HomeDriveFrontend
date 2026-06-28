@@ -1,6 +1,6 @@
 import type { Workspace, WorkspaceIcon } from '@/types/workspace.type';
 import type { MediaType } from '@/types/file.type';
-import { Home, Triangle, Users, Link2, Star, BarChart2, Trash2, FolderPlus, Upload, Image, Video, Music, Folder, FileText, Code2 } from 'lucide-react';
+import { Home, Triangle, Users, Link2, Star, BarChart2, Trash2, FolderPlus, Upload, Image, Video, Music, Folder, FileText, Code2, ShieldCheck } from 'lucide-react';
 
 const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1']);
 
@@ -32,6 +32,8 @@ export const VITE_SOCKET_URL = import.meta.env.VITE_SOCKET_URL as string;
 export const API_BASE_URL = resolveNetworkUrl(VITE_API_URL, '/api');
 export const SOCKET_BASE_URL = resolveNetworkUrl(VITE_SOCKET_URL, typeof window !== 'undefined' ? window.location.origin : '');
 
+export const TEMP_ALLOWED_EMAILS: string[] = ['snir@test.com', 'tal@test.com'];
+
 export const NAV_ITEMS = [
   { to: '/home', icon: Home, label: 'Home' },
   { to: '/mydrive', icon: Triangle, label: 'My Drive' },
@@ -39,6 +41,7 @@ export const NAV_ITEMS = [
   { to: '/shared', icon: Link2, label: 'Shared with Me' },
   { to: '/starred', icon: Star, label: 'Starred' },
   { to: '/stats', icon: BarChart2, label: 'Statistics' },
+  { to: '/admin/access', icon: ShieldCheck, label: 'Access Admin' },
   { to: '/trash', icon: Trash2, label: 'Trash' },
 ] as const;
 

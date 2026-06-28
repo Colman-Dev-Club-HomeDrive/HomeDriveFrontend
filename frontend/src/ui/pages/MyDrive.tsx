@@ -16,6 +16,12 @@ import {
 import { getChildFiles, getCurrentFolder, getIndexedFileId } from '@/utils/workspaceFolder';
 import { getWorkspacePath, isCodeWorkspace } from '@/utils/workspaceNavigation';
 import { WorkspaceCodeEditor } from '@/ui/components/workspace/WorkspaceCodeEditor';
+import { useAppSelector } from '@/store/hooks';
+import { selectUser } from '@/store/slices/user.slice';
+import { TEMP_ALLOWED_EMAILS } from '@/consts/consts';
+import { useListAccessUsersQuery } from '@/store/apis/access.api';
+
+const DEFAULT_ACCESS_USERS = TEMP_ALLOWED_EMAILS.map((email) => ({ email, role: 'manager' as const }));
 
 const MEDIA_TYPE_LABELS: Record<MediaType, string> = {
   documents: 'Documents',
@@ -45,6 +51,14 @@ function sortWorkspaceItems(items: IndexedFile[]): IndexedFile[] {
 export function MyDrive() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { email: userEmail } = useAppSelector(selectUser);
+  const normalizedUserEmail = (userEmail ?? '').trim().toLowerCase();
+  const { data: sharedAccessUsers = DEFAULT_ACCESS_USERS } = useListAccessUsersQuery();
+  const currentUserAccess = sharedAccessUsers.find((entry) => entry.email === normalizedUserEmail);
+  const canSeeSharedInfo = Boolean(currentUserAccess);
+  const canUploadFiles = currentUserAccess?.role === 'manager' || currentUserAccess?.role === 'editor';
+  const canDownloadFiles = Boolean(currentUserAccess);
+  const canWriteFiles = currentUserAccess?.role === 'manager' || currentUserAccess?.role === 'editor';
   const { addFiles } = useFileUpload();
   const [searchParams, setSearchParams] = useSearchParams();
   const { workspaceId } = useParams();
@@ -182,13 +196,19 @@ export function MyDrive() {
               <h1 className="text-xl font-semibold">Code</h1>
               <div className="flex flex-wrap items-center justify-end gap-2">
                 {controls}
-                {addFileButton}
+                {canUploadFiles ? addFileButton : null}
               </div>
             </div>
           )}
         />
       ) : (
         <>
+          {!canSeeSharedInfo && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              Access to files in this area is temporarily limited for this account.
+            </div>
+          )}
+
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold">{workspace?.name ?? 'My Drive'}</h1>
@@ -217,12 +237,14 @@ export function MyDrive() {
                 </div>
               )}
             </div>
-            {addFileButton}
+            {canUploadFiles ? addFileButton : null}
           </div>
 
           {isError && <p className="text-sm text-destructive">Failed to load files.</p>}
 
-          {isLoading ? (
+          {!canSeeSharedInfo ? (
+            <p className="text-sm text-muted-foreground">No files available for this account right now.</p>
+          ) : isLoading ? (
             <div className="flex flex-col gap-1">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="h-12 animate-pulse rounded-xl bg-muted" />
@@ -261,6 +283,8 @@ export function MyDrive() {
                       key={getIndexedFileId(file)}
                       file={file}
                       onOpenFolder={handleOpenFolder}
+                      canDownload={canDownloadFiles}
+                      canWrite={canWriteFiles}
                     />
                   ))}
                 </div>
@@ -272,6 +296,8 @@ export function MyDrive() {
                       key={file._id}
                       file={file}
                       onOpenFolder={workspaceId ? handleOpenFolder : undefined}
+                      canDownload={canDownloadFiles}
+                      canWrite={canWriteFiles}
                     />
                   ))}
                 </div>

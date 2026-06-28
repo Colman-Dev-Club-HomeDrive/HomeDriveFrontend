@@ -4,12 +4,18 @@ import { useHotkey } from '@tanstack/react-hotkeys';
 import { FolderPlus, Plus } from 'lucide-react';
 import { useRef } from 'react';
 
-export function CreateNewCard() {
+type CreateNewCardProps = {
+  canUpload?: boolean;
+};
+
+export function CreateNewCard({ canUpload = true }: CreateNewCardProps) {
   const { addFiles, isDragging } = useFileUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
   const handleActionClick = (label: string) => {
+    if (!canUpload) return;
+
     if (label === 'Upload Files') {
       fileInputRef.current?.click();
     }
@@ -24,12 +30,14 @@ export function CreateNewCard() {
     (target instanceof HTMLElement && target.isContentEditable);
 
   useHotkey('Mod+U', (event) => {
+    if (!canUpload) return;
     if (isTypingTarget(event.target)) return;
     event.preventDefault();
     fileInputRef.current?.click();
   });
 
   useHotkey('Mod+F', (event) => {
+    if (!canUpload) return;
     if (isTypingTarget(event.target)) return;
     event.preventDefault();
     folderInputRef.current?.click();
@@ -74,7 +82,7 @@ export function CreateNewCard() {
           >
             <Plus className="size-4" />
           </span>
-          Drop anywhere to upload
+          {canUpload ? 'Drop anywhere to upload' : 'Viewer access: uploads disabled'}
         </div>
         <div>
           <h2 className="text-2xl font-bold">Add to Drive</h2>
@@ -90,6 +98,7 @@ export function CreateNewCard() {
             onClick={() => handleActionClick(label)}
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors hover:opacity-80"
             style={{ backgroundColor: 'var(--color-dark-card-alt)' }}
+            disabled={!canUpload}
           >
             {label === 'New Folder' ? <FolderPlus className="size-4 shrink-0 text-slate-400" /> : <Icon className="size-4 shrink-0 text-slate-400" />}
             <span className="flex-1 text-left">{label}</span>

@@ -10,7 +10,11 @@ import { useUpdateWorkspaceMutation } from '@/store/apis/workspaces.api';
 import type { Workspace } from '@/types/workspace.type';
 import { getWorkspacePath } from '@/utils/workspaceNavigation';
 
-export function WorkspacesSection() {
+type WorkspacesSectionProps = {
+  canWrite?: boolean;
+};
+
+export function WorkspacesSection({ canWrite = true }: WorkspacesSectionProps) {
   const {
     workspaces,
     isLoading,
@@ -36,6 +40,7 @@ export function WorkspacesSection() {
   };
 
   const handleShareWorkspace = (workspace: Workspace) => {
+    if (!canWrite) return;
     setShareWorkspace(workspace);
   };
 
@@ -48,6 +53,7 @@ export function WorkspacesSection() {
   };
 
   const handleDeleteWorkspace = (workspace: (typeof workspaces)[number]) => {
+    if (!canWrite) return;
     const confirmed = window.confirm(
       `Are you sure you want to delete "${workspace.name}"? This action cannot be undone.`
     );
@@ -66,11 +72,13 @@ export function WorkspacesSection() {
             >
               My Workspaces
             </h2>
-            <ActionMenuButton
-              ariaLabel="Workspace actions"
-              items={menuItems}
-              className="text-muted-foreground hover:text-foreground"
-            />
+            {canWrite && (
+              <ActionMenuButton
+                ariaLabel="Workspace actions"
+                items={menuItems}
+                className="text-muted-foreground hover:text-foreground"
+              />
+            )}
           </div>
 
           {isError && (
@@ -92,6 +100,7 @@ export function WorkspacesSection() {
                   onShare={handleShareWorkspace}
                   onDelete={handleDeleteWorkspace}
                   onDownload={() => navigate('/workspaces')}
+                  canWrite={canWrite}
                 />
               ))}
           </div>
@@ -106,34 +115,42 @@ export function WorkspacesSection() {
         </div>
       </section>
 
-      <CreateWorkspaceDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSubmit={addWorkspace}
-      />
+      {canWrite && (
+        <CreateWorkspaceDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onSubmit={addWorkspace}
+        />
+      )}
 
-      <EditWorkspaceDialog
-        workspace={editWorkspace}
-        open={editWorkspace !== null}
-        onOpenChange={(open) => { if (!open) setEditWorkspace(null); }}
-        onSubmit={(id, values) => { updateWorkspace(id, values); setEditWorkspace(null); }}
-        onDelete={deleteWorkspace}
-      />
+      {canWrite && (
+        <EditWorkspaceDialog
+          workspace={editWorkspace}
+          open={editWorkspace !== null}
+          onOpenChange={(open) => { if (!open) setEditWorkspace(null); }}
+          onSubmit={(id, values) => { updateWorkspace(id, values); setEditWorkspace(null); }}
+          onDelete={deleteWorkspace}
+        />
+      )}
 
-      <WorkspaceShareDialog
-        workspace={shareWorkspace}
-        open={shareWorkspace !== null}
-        onOpenChange={(open) => { if (!open) setShareWorkspace(null); }}
-        onSaveCollaborators={handleSaveWorkspaceCollaborators}
-        isLoading={isSharingWorkspace}
-      />
+      {canWrite && (
+        <WorkspaceShareDialog
+          workspace={shareWorkspace}
+          open={shareWorkspace !== null}
+          onOpenChange={(open) => { if (!open) setShareWorkspace(null); }}
+          onSaveCollaborators={handleSaveWorkspaceCollaborators}
+          isLoading={isSharingWorkspace}
+        />
+      )}
 
-      <ArrangeWorkspacesDialog
-        open={arrangeOpen}
-        onOpenChange={setArrangeOpen}
-        workspaces={workspaces}
-        onSave={reorderWorkspaces}
-      />
+      {canWrite && (
+        <ArrangeWorkspacesDialog
+          open={arrangeOpen}
+          onOpenChange={setArrangeOpen}
+          workspaces={workspaces}
+          onSave={reorderWorkspaces}
+        />
+      )}
     </>
   );
 }

@@ -16,9 +16,10 @@ export type WorkspaceCardProps = {
   onShare: (workspace: Workspace) => void;
   onDelete: (workspace: Workspace) => void;
   onDownload: (workspace: Workspace) => void;
+  canWrite?: boolean;
 };
 
-export function WorkspaceCard({ workspace, onOpen, onTogglePin, onEdit, onShare, onDelete, onDownload }: WorkspaceCardProps) {
+export function WorkspaceCard({ workspace, onOpen, onTogglePin, onEdit, onShare, onDelete, onDownload, canWrite = true }: WorkspaceCardProps) {
   const { id, name, fileCount, icon, color, pinned } = workspace;
   const Icon = ICON_MAP[icon];
 
@@ -45,13 +46,15 @@ export function WorkspaceCard({ workspace, onOpen, onTogglePin, onEdit, onShare,
       </div>
 
       {/* Pin toggle */}
-      <button
-        className="absolute top-3 right-8 rounded-lg p-1 opacity-0 transition-all group-hover:opacity-100 text-muted-foreground hover:text-primary"
-        onClick={(e) => { e.stopPropagation(); onTogglePin(id); }}
-        aria-label={pinned ? `Unpin ${name}` : `Pin ${name}`}
-      >
-        {pinned ? <Pin className="size-3.5 text-primary" /> : <PinOff className="size-3.5" />}
-      </button>
+      {canWrite && (
+        <button
+          className="absolute top-3 right-8 rounded-lg p-1 opacity-0 transition-all group-hover:opacity-100 text-muted-foreground hover:text-primary"
+          onClick={(e) => { e.stopPropagation(); onTogglePin(id); }}
+          aria-label={pinned ? `Unpin ${name}` : `Pin ${name}`}
+        >
+          {pinned ? <Pin className="size-3.5 text-primary" /> : <PinOff className="size-3.5" />}
+        </button>
+      )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -77,36 +80,42 @@ export function WorkspaceCard({ workspace, onOpen, onTogglePin, onEdit, onShare,
             Download
           </DropdownMenuItem>
 
-          <DropdownMenuItem
-            onClick={(event) => {
-              event.stopPropagation();
-              onEdit(workspace);
-            }}
-          >
-            <Pencil className="size-4" />
-            Edit
-          </DropdownMenuItem>
+          {canWrite && (
+            <DropdownMenuItem
+              onClick={(event) => {
+                event.stopPropagation();
+                onEdit(workspace);
+              }}
+            >
+              <Pencil className="size-4" />
+              Edit
+            </DropdownMenuItem>
+          )}
 
-          <DropdownMenuItem
-            onClick={(event) => {
-              event.stopPropagation();
-              onShare(workspace);
-            }}
-          >
-            <Share2 className="size-4" />
-            Share
-          </DropdownMenuItem>
+          {canWrite && (
+            <DropdownMenuItem
+              onClick={(event) => {
+                event.stopPropagation();
+                onShare(workspace);
+              }}
+            >
+              <Share2 className="size-4" />
+              Share
+            </DropdownMenuItem>
+          )}
 
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={(event) => {
-              event.stopPropagation();
-              onDelete(workspace);
-            }}
-          >
-            <Trash2 className="size-4" />
-            Delete
-          </DropdownMenuItem>
+          {canWrite && (
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete(workspace);
+              }}
+            >
+              <Trash2 className="size-4" />
+              Delete
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

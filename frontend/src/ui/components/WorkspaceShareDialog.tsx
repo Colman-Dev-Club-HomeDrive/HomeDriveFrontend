@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Copy, Loader2, Lock, Plus } from 'lucide-react';
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,7 @@ export function WorkspaceShareDialog({
   const [newCollaborator, setNewCollaborator] = useState('');
   const [collaborators, setCollaborators] = useState<CollaboratorAccess[]>([]);
   const [updatingEmail, setUpdatingEmail] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
   const [isCopying, setIsCopying] = useState(false);
   const [copied, setCopied] = useState(false);
   const dialogStateRef = useRef({ open: false, workspaceId: '' });
@@ -106,11 +108,33 @@ export function WorkspaceShareDialog({
   };
 
   const removeCollaborator = (email: string) => {
+    setErrorMessage('');
     setCollaborators((prev) => prev.filter((collaborator) => collaborator.email !== email));
+  };
+
+  const getApiErrorMessage = (error: unknown, fallback: string): string => {
+    if (typeof error === 'object' && error !== null && 'data' in error) {
+      const data = (error as FetchBaseQueryError).data;
+      if (
+        typeof data === 'object' &&
+        data !== null &&
+        'message' in data &&
+        typeof (data as { message?: unknown }).message === 'string'
+      ) {
+        return (data as { message: string }).message;
+      }
+    }
+
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+
+    return fallback;
   };
 
   const handlePermissionChange = async (email: string, permission: SharePermission) => {
     if (!workspace || !isOwner) return;
+    setErrorMessage('');
 
     const previousCollaborators = collaborators;
     const nextCollaborators = collaborators.map((collaborator) =>
@@ -128,7 +152,7 @@ export function WorkspaceShareDialog({
       setCollaborators(parseCollaboration(updated.collaboration));
     } catch (error) {
       setCollaborators(previousCollaborators);
-      console.error('failed to update workspace share permission:', error);
+      setErrorMessage(getApiErrorMessage(error, 'Failed to update collaborator permission.'));
     } finally {
       setUpdatingEmail(null);
     }
@@ -151,13 +175,14 @@ export function WorkspaceShareDialog({
 
   const handleSave = async () => {
     if (!workspace) return;
+    setErrorMessage('');
 
     const nextValue = serializeCollaboration(collaborators);
     try {
       await onSaveCollaborators(nextValue);
       onOpenChange(false);
     } catch (error) {
-      console.error('failed to save workspace collaborators:', error);
+      setErrorMessage(getApiErrorMessage(error, 'Failed to save collaborators.'));
     }
   };
 
@@ -186,7 +211,7 @@ export function WorkspaceShareDialog({
                   onChange={(event) => setNewCollaborator(event.target.value)}
                   onKeyDown={onEmailKeyDown}
                   placeholder="name@example.com"
-                  className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none transition-colors focus:border-slate-500"
+                  className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition-colors focus:border-slate-500"
                   disabled={isLoading}
                 />
                 <button
@@ -199,6 +224,7 @@ export function WorkspaceShareDialog({
                   Add
                 </button>
               </div>
+              {errorMessage && <p className="text-xs text-destructive">{errorMessage}</p>}
             </div>
           )}
 
@@ -213,6 +239,8 @@ export function WorkspaceShareDialog({
               onRemove={isOwner ? removeCollaborator : undefined}
             />
           </div>
+
+          {errorMessage && <p className="text-xs text-destructive">{errorMessage}</p>}
 
           <div className="space-y-2 rounded-lg border border-slate-200 p-3">
             <p className="text-base font-semibold text-slate-900">General access</p>
@@ -247,7 +275,8 @@ export function WorkspaceShareDialog({
                 type="button"
                 onClick={handleSave}
                 disabled={isLoading}
-                className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:opacity-50"
+                style={{ backgroundColor: 'var(--color-dark-card)' }}
               >
                 {isLoading ? <Loader2 className="size-4 animate-spin" /> : null}
                 Done
