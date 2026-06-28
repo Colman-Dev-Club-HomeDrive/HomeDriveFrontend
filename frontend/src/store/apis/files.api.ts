@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithAuth } from './baseQuery';
-import type { IndexedFile, MediaType, MediaTypeCount, StorageStats } from '@/types/file.type';
+import type { IndexedFile, MediaType, MediaTypeCount, StorageStats, TrashFile } from '@/types/file.type';
 import type { SharePermission } from '@/types/share.type';
 
 type ListFilesArgs =
@@ -28,6 +28,13 @@ export const filesApi = createApi({
         params,
       };
       },
+      providesTags: ['File'],
+    }),
+
+    listTrashFiles: builder.query<TrashFile[], void>({
+      query: () => ({
+        url: '/files/trash',
+      }),
       providesTags: ['File'],
     }),
 
@@ -90,6 +97,16 @@ export const filesApi = createApi({
       invalidatesTags: ['File'],
     }),
 
+    restoreFile: builder.mutation<{ message: string; file: IndexedFile }, string>({
+      query: (id) => ({ url: `/files/${id}/restore`, method: 'PATCH' }),
+      invalidatesTags: ['File'],
+    }),
+
+    permanentlyDeleteFile: builder.mutation<{ message: string }, string>({
+      query: (id) => ({ url: `/files/${id}/permanent`, method: 'DELETE' }),
+      invalidatesTags: ['File'],
+    }),
+
     renameFile: builder.mutation<IndexedFile, { id: string; name: string }>({
       query: ({ id, name }) => ({
         url: `/files/${id}`,
@@ -124,11 +141,14 @@ export const filesApi = createApi({
 
 export const {
   useListFilesQuery,
+  useListTrashFilesQuery,
   useGetMediaTypeCountsQuery,
   useGetStorageStatsQuery,
   useUploadFileMutation,
   useIndexFileMutation,
   useDeleteFileMutation,
+  useRestoreFileMutation,
+  usePermanentlyDeleteFileMutation,
   useRenameFileMutation,
   useShareFileMutation,
   useUpdateFileSharePermissionMutation,

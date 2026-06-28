@@ -13,6 +13,12 @@ type MediaConfig = {
   color: string;
 };
 
+function hasAssignedWorkspaceId(workspaceId: string | null | undefined): workspaceId is string {
+  if (!workspaceId) return false;
+  const normalized = workspaceId.trim().toLowerCase();
+  return normalized.length > 0 && normalized !== 'null' && normalized !== 'undefined';
+}
+
 const MEDIA_CONFIG: Record<MediaType, MediaConfig> = {
   documents: { label: 'Documents', icon: FileText, color: '#5E7892' },
   photos: { label: 'Photos', icon: Image, color: '#4A7C6B' },
@@ -117,17 +123,11 @@ export function Stats() {
       files: 0,
     }));
     const rowByWorkspaceId = new Map(rows.map((row) => [row.workspaceId, row]));
-    let unassigned = { workspaceId: 'unassigned', workspaceName: 'Unassigned', bytes: 0, files: 0 };
 
     for (const file of files) {
       if (file.isDirectory) continue;
 
-      if (!file.workspaceId) {
-        unassigned = {
-          ...unassigned,
-          bytes: unassigned.bytes + file.size,
-          files: unassigned.files + 1,
-        };
+      if (!hasAssignedWorkspaceId(file.workspaceId)) {
         continue;
       }
 
@@ -146,10 +146,6 @@ export function Stats() {
       };
       rows.push(orphanWorkspace);
       rowByWorkspaceId.set(file.workspaceId, orphanWorkspace);
-    }
-
-    if (unassigned.files > 0) {
-      rows.push(unassigned);
     }
 
     rows.sort((a, b) => b.bytes - a.bytes || a.workspaceName.localeCompare(b.workspaceName));

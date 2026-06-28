@@ -24,8 +24,15 @@ export interface IndexedFile {
   workspaceId?: string;
   ownerId: string;
   collaboration?: string;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TrashFile extends IndexedFile {
+  isDeleted: boolean;
+  deletedAt: string | null;
 }
 
 export type MediaType = 'documents' | 'photos' | 'videos' | 'audio';
