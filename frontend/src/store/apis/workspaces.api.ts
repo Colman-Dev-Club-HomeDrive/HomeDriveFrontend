@@ -2,6 +2,24 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithAuth } from './baseQuery';
 import type { CreateWorkspaceFormValues, EditWorkspaceFormValues, Workspace } from '@/types/workspace.type';
 
+export type WorkspaceStats = {
+  workspaceId: string;
+  totalFiles: number;
+  totalBytes: number;
+  mediaBreakdown: Array<{
+    mediaType: 'documents' | 'photos' | 'videos' | 'audio';
+    count: number;
+    bytes: number;
+  }>;
+  userBreakdown: Array<{
+    ownerId: string;
+    ownerName: string;
+    files: number;
+    bytes: number;
+  }>;
+  updatedAt: string;
+};
+
 export const workspacesApi = createApi({
   reducerPath: 'workspacesApi',
   baseQuery: baseQueryWithAuth,
@@ -10,6 +28,10 @@ export const workspacesApi = createApi({
     listWorkspaces: builder.query<Workspace[], void>({
       query: () => '/workspaces',
       providesTags: ['Workspace'],
+    }),
+
+    getWorkspaceStats: builder.query<WorkspaceStats, string>({
+      query: (workspaceId) => `/workspaces/${workspaceId}/stats`,
     }),
 
     createWorkspace: builder.mutation<Workspace, CreateWorkspaceFormValues>({
@@ -99,6 +121,7 @@ export const workspacesApi = createApi({
 
 export const {
   useListWorkspacesQuery,
+  useGetWorkspaceStatsQuery,
   useCreateWorkspaceMutation,
   useUpdateWorkspaceMutation,
   useDeleteWorkspaceMutation,
