@@ -7,79 +7,82 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shadcn/components/ui/dialog';
-import { API_BASE_URL } from '@/consts/consts';
 import { useAppSelector } from '@/store/hooks';
 import { selectUser } from '@/store/slices/user.slice';
-import { useShareFileMutation } from '@/store/apis/files.api';
-import type { IndexedFile } from '@/types/file.type';
+import { useUpdateWorkspaceMutation } from '@/store/apis/workspaces.api';
+import type { Workspace } from '@/types/workspace.type';
 import type { CollaboratorAccess, ShareAccessPerson, SharePermission } from '@/types/share.type';
 import { parseCollaboration, serializeCollaboration } from '@/utils/collaboration';
 import { ShareAccessList } from '@/ui/components/ShareAccessList';
 
-type FileShareDialogProps = {
-  file: IndexedFile | null;
+type WorkspaceShareDialogProps = {
+  workspace: Workspace | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaveCollaborators: (shareWith: string) => Promise<void>;
   isLoading?: boolean;
 };
 
-export function FileShareDialog({
-  file,
+export function WorkspaceShareDialog({
+  workspace,
   open,
   onOpenChange,
   onSaveCollaborators,
   isLoading = false,
-}: FileShareDialogProps) {
+}: WorkspaceShareDialogProps) {
   const user = useAppSelector(selectUser);
-  const [shareFile, { isLoading: isSavingPermission }] = useShareFileMutation();
+  const [updateWorkspace, { isLoading: isSavingPermission }] = useUpdateWorkspaceMutation();
   const [newCollaborator, setNewCollaborator] = useState('');
   const [collaborators, setCollaborators] = useState<CollaboratorAccess[]>([]);
   const [updatingEmail, setUpdatingEmail] = useState<string | null>(null);
   const [isCopying, setIsCopying] = useState(false);
   const [copied, setCopied] = useState(false);
-  const dialogStateRef = useRef({ open: false, fileId: '' });
+  const dialogStateRef = useRef({ open: false, workspaceId: '' });
 
   const userEmail = user.email?.trim().toLowerCase() || '';
-  const isOwner = Boolean(file && file.ownerId === user.id);
-  const fileId = file?.id || file?._id || '';
+  const collaboratorEmails = useMemo(
+    () => parseCollaboration(workspace?.collaboration).map((entry) => entry.email),
+    [workspace?.collaboration],
+  );
+  const isOwner = Boolean(workspace && !collaboratorEmails.includes(userEmail));
+  const workspaceId = workspace?.id || '';
 
   useEffect(() => {
-    if (!open || !file) {
+    if (!open || !workspace) {
       dialogStateRef.current.open = open;
       return;
     }
 
     const shouldSync =
-      !dialogStateRef.current.open || dialogStateRef.current.fileId !== fileId;
+      !dialogStateRef.current.open || dialogStateRef.current.workspaceId !== workspaceId;
 
-    dialogStateRef.current = { open: true, fileId };
+    dialogStateRef.current = { open: true, workspaceId };
 
     if (shouldSync) {
-      setCollaborators(parseCollaboration(file.collaboration));
+      setCollaborators(parseCollaboration(workspace.collaboration));
       setNewCollaborator('');
       setCopied(false);
       setUpdatingEmail(null);
     }
-  }, [file, fileId, open]);
+  }, [open, workspace, workspaceId]);
 
-  const downloadUrl = useMemo(() => {
-    if (!file) return '';
-    return `${API_BASE_URL}/files/${file.id || file._id}/download`;
-  }, [file]);
+  const shareUrl = useMemo(() => {
+    if (!workspace || typeof window === 'undefined') return '';
+    return `${window.location.origin}/workspaces/${workspace.id}`;
+  }, [workspace]);
 
   const peopleWithAccess = useMemo<ShareAccessPerson[]>(() => {
-    if (!file) return [];
+    if (!workspace) return [];
 
     const owner: ShareAccessPerson = {
-      id: file.ownerId,
+      id: 'owner',
       email: isOwner ? userEmail || user.name?.trim() || 'you' : 'Owner',
       displayName: isOwner ? user.name : 'Owner',
       role: 'owner',
     };
 
     const sharedPeople = collaborators
-      .filter((collaborator) => isOwner && collaborator.email === userEmail ? false : true)
+      .filter((collaborator) => (isOwner && collaborator.email === userEmail ? false : true))
       .map<ShareAccessPerson>((collaborator) => ({
         id: collaborator.email,
         email: collaborator.email,
@@ -88,7 +91,7 @@ export function FileShareDialog({
       }));
 
     return [owner, ...sharedPeople];
-  }, [collaborators, file, isOwner, user.name, userEmail]);
+  }, [collaborators, isOwner, user.name, userEmail, workspace]);
 
   const addCollaboratorToDraft = () => {
     const normalized = newCollaborator.trim().toLowerCase();
@@ -107,7 +110,7 @@ export function FileShareDialog({
   };
 
   const handlePermissionChange = async (email: string, permission: SharePermission) => {
-    if (!file || !isOwner) return;
+    if (!workspace || !isOwner) return;
 
     const previousCollaborators = collaborators;
     const nextCollaborators = collaborators.map((collaborator) =>
@@ -118,43 +121,43 @@ export function FileShareDialog({
     setUpdatingEmail(email);
 
     try {
-      const updated = await shareFile({
-        id: fileId,
-        shareWith: serializeCollaboration(nextCollaborators),
+      const updated = await updateWorkspace({
+        id: workspace.id,
+        values: { collaboration: serializeCollaboration(nextCollaborators) },
       }).unwrap();
       setCollaborators(parseCollaboration(updated.collaboration));
     } catch (error) {
       setCollaborators(previousCollaborators);
-      console.error('failed to update file share permission:', error);
+      console.error('failed to update workspace share permission:', error);
     } finally {
       setUpdatingEmail(null);
     }
   };
 
   const handleCopyLink = async () => {
-    if (!downloadUrl) return;
+    if (!shareUrl) return;
 
     try {
       setIsCopying(true);
-      await navigator.clipboard.writeText(downloadUrl);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('failed to copy share link:', error);
+      console.error('failed to copy workspace share link:', error);
     } finally {
       setIsCopying(false);
     }
   };
 
   const handleSave = async () => {
-    if (!file) return;
+    if (!workspace) return;
 
     const nextValue = serializeCollaboration(collaborators);
     try {
       await onSaveCollaborators(nextValue);
       onOpenChange(false);
     } catch (error) {
-      console.error('failed to save file collaborators:', error);
+      console.error('failed to save workspace collaborators:', error);
     }
   };
 
@@ -169,7 +172,7 @@ export function FileShareDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Share &quot;{file?.name ?? 'File'}&quot;</DialogTitle>
+          <DialogTitle>Share &quot;{workspace?.name ?? 'Workspace'}&quot;</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-5">
@@ -215,7 +218,7 @@ export function FileShareDialog({
             <p className="text-base font-semibold text-slate-900">General access</p>
             <div className="flex items-center gap-2 text-sm text-slate-700">
               <Lock className="size-4" />
-              Restricted - only invited people can access this file.
+              Restricted - only invited people can access this workspace.
             </div>
           </div>
         </div>
@@ -224,7 +227,7 @@ export function FileShareDialog({
           <button
             type="button"
             onClick={handleCopyLink}
-            disabled={isCopying || !downloadUrl}
+            disabled={isCopying || !shareUrl}
             className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-50"
           >
             {copied ? <Check className="size-4 text-emerald-600" /> : isCopying ? <Loader2 className="size-4 animate-spin" /> : <Copy className="size-4" />}
