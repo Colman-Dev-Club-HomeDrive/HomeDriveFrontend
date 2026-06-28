@@ -2,6 +2,7 @@ import { Home } from '@/ui/pages/Home';
 import { Login } from '@/ui/pages/Login';
 import { MyDrive } from '@/ui/pages/MyDrive';
 import { NotFound } from '@/ui/pages/NotFound';
+import { Stats } from '@/ui/pages/Stats';
 import { WorkSpace } from '@/ui/pages/WorkSpace';
 import { Root } from '@/ui/Root';
 import { SignUp } from '@/ui/pages/SignUp';
@@ -55,6 +56,11 @@ export const router = createBrowserRouter([
         path: '/workspaces/:workspaceId', 
         Component: MyDrive,
         loader: requireAuth
+      },
+      {
+        path: '/stats',
+        Component: Stats,
+        loader: requireAuth,
       },
     ]
   },
