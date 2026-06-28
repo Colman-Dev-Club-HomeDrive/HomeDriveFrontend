@@ -3,6 +3,7 @@ import { API_BASE_URL } from '@/consts/consts';
 
 export const baseQueryWithAuth = fetchBaseQuery({
   baseUrl: API_BASE_URL,
+  credentials: 'include',
   prepareHeaders: (headers) => {
     const token = localStorage.getItem('token');
     if (token) {
