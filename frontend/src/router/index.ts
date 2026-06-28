@@ -6,6 +6,7 @@ import { Stats } from '@/ui/pages/Stats';
 import { Trash } from '@/ui/pages/Trash';
 import { WorkSpace } from '@/ui/pages/WorkSpace';
 import { Root } from '@/ui/Root';
+import { Settings } from '@/ui/pages/Settings';
 import { SignUp } from '@/ui/pages/SignUp';
 import { createBrowserRouter, redirect } from 'react-router-dom';
 
@@ -66,6 +67,11 @@ export const router = createBrowserRouter([
       {
         path: '/trash',
         Component: Trash,
+        loader: requireAuth,
+      },
+      {
+        path: '/settings',
+        Component: Settings,
         loader: requireAuth,
       },
     ]

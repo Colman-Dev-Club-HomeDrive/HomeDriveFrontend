@@ -34,3 +34,14 @@ export type RegisterResponse = {
 export type ApiErrorResponse = {
   message?: string;
 };
+
+export type ChangePasswordRequest = {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+};
+
+export type ChangePasswordResponse = {
+  success: true;
+  message: string;
+};
