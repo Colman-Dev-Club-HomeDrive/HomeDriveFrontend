@@ -6,9 +6,10 @@ type StorageCardProps = {
   totalBytes: number;
   isLoading?: boolean;
   hasError?: boolean;
+  onClick?: () => void;
 };
 
-export function StorageCard({ usedBytes, totalBytes, isLoading = false, hasError = false }: StorageCardProps) {
+export function StorageCard({ usedBytes, totalBytes, isLoading = false, hasError = false, onClick }: StorageCardProps) {
   const safeTotalBytes = Math.max(totalBytes, 0);
   const safeUsedBytes = Math.max(usedBytes, 0);
   const pct = safeTotalBytes > 0 ? Math.min((safeUsedBytes / safeTotalBytes) * 100, 100) : 0;
@@ -17,8 +18,8 @@ export function StorageCard({ usedBytes, totalBytes, isLoading = false, hasError
   const usedText = isLoading ? 'Loading...' : formatSize(safeUsedBytes);
   const totalText = safeTotalBytes > 0 ? formatSize(safeTotalBytes) : 'Unknown';
 
-  return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm transition-colors hover:bg-accent">
+  const content = (
+    <>
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-muted-foreground">{titleText}</span>
         <Cloud className="size-4 text-muted-foreground" />
@@ -33,6 +34,22 @@ export function StorageCard({ usedBytes, totalBytes, isLoading = false, hasError
       <p className="text-xs text-muted-foreground">
         Out of {totalText} total
       </p>
-    </div>
+    </>
   );
+
+  const baseClassName = 'flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm transition-colors';
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`${baseClassName} hover:bg-accent cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return <div className={`${baseClassName} hover:bg-accent`}>{content}</div>;
 }

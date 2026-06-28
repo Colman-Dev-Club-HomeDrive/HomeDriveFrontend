@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { ActionMenuButton } from '@/ui/components/ActionMenu/ActionMenuButton';
 import { CreateWorkspaceDialog } from '@/ui/components/ActionMenu/CreateWorkspaceDialog';
 import { EditWorkspaceDialog } from '@/ui/components/ActionMenu/EditWorkspaceDialog';
 import { ArrangeWorkspacesDialog } from '@/ui/components/ActionMenu/ArrangeWorkspacesDialog';
 import { useWorkspacesSection } from '@/hooks/useWorkspacesSection';
 import { WorkspaceCard } from '@/ui/components/WorkspaceCard';
+import { WorkspaceShareDialog } from '@/ui/components/WorkspaceShareDialog';
+import { useUpdateWorkspaceMutation } from '@/store/apis/workspaces.api';
 import type { Workspace } from '@/types/workspace.type';
 import { getWorkspacePath } from '@/utils/workspaceNavigation';
 
@@ -26,8 +29,30 @@ export function WorkspacesSection() {
     togglePin,
     reorderWorkspaces,
   } = useWorkspacesSection();
+  const [shareWorkspace, setShareWorkspace] = useState<Workspace | null>(null);
+  const [updateWorkspaceMutation, { isLoading: isSharingWorkspace }] = useUpdateWorkspaceMutation();
   const openWorkspace = (workspace: Workspace) => {
     navigate(getWorkspacePath(workspace));
+  };
+
+  const handleShareWorkspace = (workspace: Workspace) => {
+    setShareWorkspace(workspace);
+  };
+
+  const handleSaveWorkspaceCollaborators = async (shareWith: string) => {
+    if (!shareWorkspace) return;
+    await updateWorkspaceMutation({
+      id: shareWorkspace.id,
+      values: { collaboration: shareWith },
+    }).unwrap();
+  };
+
+  const handleDeleteWorkspace = (workspace: (typeof workspaces)[number]) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${workspace.name}"? This action cannot be undone.`
+    );
+    if (!confirmed) return;
+    deleteWorkspace(workspace.id);
   };
 
   return (
@@ -64,6 +89,8 @@ export function WorkspacesSection() {
                   onOpen={() => openWorkspace(workspace)}
                   onTogglePin={togglePin}
                   onEdit={setEditWorkspace}
+                  onShare={handleShareWorkspace}
+                  onDelete={handleDeleteWorkspace}
                   onDownload={() => navigate('/workspaces')}
                 />
               ))}
@@ -91,6 +118,14 @@ export function WorkspacesSection() {
         onOpenChange={(open) => { if (!open) setEditWorkspace(null); }}
         onSubmit={(id, values) => { updateWorkspace(id, values); setEditWorkspace(null); }}
         onDelete={deleteWorkspace}
+      />
+
+      <WorkspaceShareDialog
+        workspace={shareWorkspace}
+        open={shareWorkspace !== null}
+        onOpenChange={(open) => { if (!open) setShareWorkspace(null); }}
+        onSaveCollaborators={handleSaveWorkspaceCollaborators}
+        isLoading={isSharingWorkspace}
       />
 
       <ArrangeWorkspacesDialog

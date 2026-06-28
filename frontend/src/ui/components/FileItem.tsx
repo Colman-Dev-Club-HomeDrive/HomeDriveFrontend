@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { File, FileText, Image, Video, Music, Folder, Trash2, Loader2, Pencil, MoreHorizontal, Download } from 'lucide-react';
-import { useDeleteFileMutation, useRenameFileMutation } from '@/store/apis/files.api';
+import { File, FileText, Image, Video, Music, Folder, Trash2, Loader2, Pencil, MoreHorizontal, Download, Share2 } from 'lucide-react';
+import { useDeleteFileMutation, useRenameFileMutation, useShareFileMutation } from '@/store/apis/files.api';
 import { API_BASE_URL } from '@/consts/consts';
 import { RenameFileDialog } from '@/ui/components/RenameFileDialog';
+import { FileShareDialog } from '@/ui/components/FileShareDialog';
 import { formatSize } from '@/utils/formatSize';
 import type { IndexedFile } from '@/types/file.type';
 import {
@@ -30,10 +31,12 @@ function getMimeIcon(file: IndexedFile) {
 
 export function FileItem({ file, onOpenFolder, disableActions = false }: FileItemProps) {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [deleteFile, { isLoading: isDeleting }] = useDeleteFileMutation();
   const [renameFile, { isLoading: isRenaming }] = useRenameFileMutation();
+  const [shareFile, { isLoading: isSharing }] = useShareFileMutation();
   const fileId = file.id || file._id;
 
   const Icon = getMimeIcon(file);
@@ -108,6 +111,19 @@ export function FileItem({ file, onOpenFolder, disableActions = false }: FileIte
     }
   }
 
+  async function handleShareAction() {
+    setShareDialogOpen(true);
+  }
+
+  async function handleSaveCollaborators(shareWith: string) {
+    try {
+      await shareFile({ id: fileId, shareWith }).unwrap();
+    } catch (error) {
+      console.error('failed to share file:', error);
+      throw error;
+    }
+  }
+
   return (
     <div className="group flex items-center gap-2 rounded-xl bg-white px-2 py-1.5 transition-colors hover:bg-slate-50">
       <button
@@ -144,7 +160,7 @@ export function FileItem({ file, onOpenFolder, disableActions = false }: FileIte
             className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
             aria-label={`More actions for ${file.name}`}
             title="More actions"
-            disabled={isDeleting || isRenaming || isDownloading}
+            disabled={isDeleting || isRenaming || isDownloading || isSharing}
             onClick={(event) => event.stopPropagation()}
           >
             <MoreHorizontal className="size-4" />
@@ -162,6 +178,11 @@ export function FileItem({ file, onOpenFolder, disableActions = false }: FileIte
             Download
           </DropdownMenuItem>
 
+          <DropdownMenuItem onClick={handleShareAction} disabled={file.isDirectory || isSharing}>
+            {isSharing ? <Loader2 className="size-4 animate-spin" /> : <Share2 className="size-4" />}
+            Share
+          </DropdownMenuItem>
+
           <DropdownMenuItem variant="destructive" onClick={() => deleteFile(fileId)}>
             {isDeleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
             Delete
@@ -177,6 +198,16 @@ export function FileItem({ file, onOpenFolder, disableActions = false }: FileIte
         onOpenChange={setRenameDialogOpen}
         onConfirm={handleRenameConfirm}
         isLoading={isRenaming}
+      />
+      )}
+
+      {!disableActions && (
+      <FileShareDialog
+        file={file}
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        onSaveCollaborators={handleSaveCollaborators}
+        isLoading={isSharing}
       />
       )}
     </div>

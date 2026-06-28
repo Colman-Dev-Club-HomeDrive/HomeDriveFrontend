@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithAuth } from './baseQuery';
 import type { IndexedFile, MediaType, MediaTypeCount, StorageStats } from '@/types/file.type';
+import type { SharePermission } from '@/types/share.type';
 
 type ListFilesArgs =
   | string
@@ -97,6 +98,27 @@ export const filesApi = createApi({
       }),
       invalidatesTags: ['File'],
     }),
+
+    shareFile: builder.mutation<IndexedFile, { id: string; shareWith: string }>({
+      query: ({ id, shareWith }) => ({
+        url: `/files/${id}/share`,
+        method: 'PATCH',
+        body: { shareWith },
+      }),
+      invalidatesTags: ['File'],
+    }),
+
+    updateFileSharePermission: builder.mutation<
+      IndexedFile,
+      { id: string; email: string; permission: SharePermission }
+    >({
+      query: ({ id, email, permission }) => ({
+        url: `/files/${id}/share/permission`,
+        method: 'PATCH',
+        body: { email, permission },
+      }),
+      invalidatesTags: ['File'],
+    }),
   }),
 });
 
@@ -108,4 +130,6 @@ export const {
   useIndexFileMutation,
   useDeleteFileMutation,
   useRenameFileMutation,
+  useShareFileMutation,
+  useUpdateFileSharePermissionMutation,
 } = filesApi;

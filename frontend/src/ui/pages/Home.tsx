@@ -10,9 +10,11 @@ import { getGreeting } from '@/utils/getGreeting';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { detectDropSource } from '@/utils/detectDropSource';
 import { RecentFilesSection } from '@/ui/components/RecentFilesSection';
+import { useNavigate } from 'react-router-dom';
 
 
 export function Home() {
+  const navigate = useNavigate();
   const { handleDragEnter, handleDragLeave, handleDrop } = useFileUpload();
   const { data: filesData, isLoading: isFilesLoading } = useListFilesQuery(undefined);
   const {
@@ -71,6 +73,7 @@ export function Home() {
             totalBytes={capacityBytes}
             isLoading={isStorageCardLoading}
             hasError={isStorageError}
+            onClick={() => navigate('/stats')}
           />
           <MediaTypesCard />
         </div>
