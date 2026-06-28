@@ -12,7 +12,6 @@ export type CreateWorkspaceFormValues = {
 export type EditWorkspaceFormValues = {
   name: string;
   description?: string;
-  collaboration?: string;
   color: string;
 };
 
