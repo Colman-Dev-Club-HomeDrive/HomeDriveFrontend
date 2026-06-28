@@ -8,6 +8,7 @@ export type CodeFileNode = {
   type: 'file' | 'folder';
   content?: string;
   language?: CodeLanguage;
+  indexedFileId?: string;
   children?: CodeFileNode[];
 };
 

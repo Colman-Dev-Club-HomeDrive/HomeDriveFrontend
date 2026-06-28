@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Copy, Moon, Save, Sun } from 'lucide-react';
-import { Button } from '@/shadcn/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -12,6 +11,7 @@ import {
   loadWorkspaceCodeState,
   saveWorkspaceCodeState,
 } from '@/services/workspaceCodeStorage.service';
+import { downloadFileAsText } from '@/services/fileDownload.service';
 import {
   CODE_LANGUAGE_OPTIONS,
   DEFAULT_WORKSPACE_CODE_STATE,
@@ -31,15 +31,24 @@ import {
   sanitizeNodeName,
   statesAreEqual,
   updateNode,
+  upsertIndexedFileNode,
 } from '@/utils/workspaceCodeTree';
 import { cn } from '@/shadcn/lib/utils';
 import { WorkspaceCodeExplorer } from '@/ui/components/workspace/WorkspaceCodeExplorer';
 import { CodeItemNameDialog } from '@/ui/components/workspace/CodeItemNameDialog';
+import { CODE_TOOLBAR_BUTTON_CLASS } from '@/ui/components/workspace/codeToolbar.const';
+
+type OpenIndexedFileTarget = {
+  id: string;
+  name: string;
+  content?: string;
+};
 
 type WorkspaceCodeEditorProps = {
   workspaceId: string;
   workspaceName: string;
   topBar?: (controls: ReactNode) => ReactNode;
+  openIndexedFile?: OpenIndexedFileTarget | null;
 };
 
 type NameDialogState =
@@ -74,7 +83,12 @@ const EDITOR_THEMES = {
   },
 } as const;
 
-export function WorkspaceCodeEditor({ workspaceId, workspaceName, topBar }: WorkspaceCodeEditorProps) {
+export function WorkspaceCodeEditor({
+  workspaceId,
+  workspaceName,
+  topBar,
+  openIndexedFile,
+}: WorkspaceCodeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const gutterRef = useRef<HTMLDivElement>(null);
   const highlightRef = useRef<HTMLPreElement>(null);
@@ -91,6 +105,36 @@ export function WorkspaceCodeEditor({ workspaceId, workspaceName, topBar }: Work
     setCopyMessage(null);
     setNameDialog({ open: false });
   }, [workspaceId]);
+
+  useEffect(() => {
+    if (!openIndexedFile) return;
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const content =
+          openIndexedFile.content ?? (await downloadFileAsText(openIndexedFile.id));
+        if (cancelled) return;
+
+        setProject((current) => {
+          const { files, fileId } = upsertIndexedFileNode(
+            current.files,
+            openIndexedFile.id,
+            openIndexedFile.name,
+            content,
+          );
+          return { ...current, files, activeFileId: fileId };
+        });
+      } catch (error) {
+        console.error('Failed to load file into editor:', error);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [openIndexedFile?.id, openIndexedFile?.name, openIndexedFile?.content]);
 
   const activeFile = project.activeFileId ? findNode(project.files, project.activeFileId) : null;
   const activeFileIsOpen = activeFile?.type === 'file';
@@ -134,8 +178,34 @@ export function WorkspaceCodeEditor({ workspaceId, workspaceName, topBar }: Work
     }
   }, [activeFileIsOpen, content]);
 
+  const loadIndexedFileIntoNode = useCallback(
+    async (indexedFileId: string, name: string, nodeId: string) => {
+      try {
+        const content = await downloadFileAsText(indexedFileId);
+        setProject((current) => ({
+          ...current,
+          files: updateNode(current.files, nodeId, (node) => ({
+            ...node,
+            content,
+            language: inferLanguageFromFileName(name),
+            indexedFileId,
+          })),
+        }));
+      } catch (error) {
+        console.error('Failed to load file into editor:', error);
+      }
+    },
+    [],
+  );
+
   const handleSelectFile = (fileId: string) => {
-    setProject((current) => ({ ...current, activeFileId: fileId }));
+    setProject((current) => {
+      const node = findNode(current.files, fileId);
+      if (node?.type === 'file' && node.indexedFileId && !node.content?.trim()) {
+        void loadIndexedFileIntoNode(node.indexedFileId, node.name, fileId);
+      }
+      return { ...current, activeFileId: fileId };
+    });
   };
 
   const handleContentChange = (nextContent: string) => {
@@ -295,14 +365,7 @@ export function WorkspaceCodeEditor({ workspaceId, workspaceName, topBar }: Work
 
   const editorControls = (
     <>
-      <span
-        className={cn(
-          'rounded-md px-2 py-1 text-xs font-medium',
-          isDirty
-            ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
-            : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-        )}
-      >
+      <span className={cn(CODE_TOOLBAR_BUTTON_CLASS, 'cursor-default')}>
         {isDirty ? 'Unsaved changes' : 'Saved'}
       </span>
 
@@ -311,7 +374,13 @@ export function WorkspaceCodeEditor({ workspaceId, workspaceName, topBar }: Work
         onValueChange={(value) => handleLanguageChange(value as CodeLanguage)}
         disabled={!activeFileIsOpen}
       >
-        <SelectTrigger size="sm" className="w-[150px]">
+        <SelectTrigger
+          className={cn(
+            CODE_TOOLBAR_BUTTON_CLASS,
+            'h-auto w-auto min-w-[9.5rem] border-0 shadow-none focus:ring-0 data-[size=sm]:h-auto',
+            "[&_svg:not([class*='text-'])]:text-primary-foreground",
+          )}
+        >
           <SelectValue placeholder="Language" />
         </SelectTrigger>
         <SelectContent>
@@ -323,10 +392,9 @@ export function WorkspaceCodeEditor({ workspaceId, workspaceName, topBar }: Work
         </SelectContent>
       </Select>
 
-      <Button
+      <button
         type="button"
-        variant="outline"
-        size="sm"
+        className={CODE_TOOLBAR_BUTTON_CLASS}
         onClick={() =>
           setProject((current) => ({
             ...current,
@@ -336,24 +404,24 @@ export function WorkspaceCodeEditor({ workspaceId, workspaceName, topBar }: Work
         aria-label={project.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
       >
         {project.theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
-      </Button>
+        {project.theme === 'dark' ? 'Light' : 'Dark'}
+      </button>
 
-      <Button
+      <button
         type="button"
-        variant="outline"
-        size="sm"
+        className={CODE_TOOLBAR_BUTTON_CLASS}
         onClick={() => void handleCopy()}
         disabled={!activeFileIsOpen}
       >
         <Copy className="size-4" />
         Copy
-      </Button>
-      {copyMessage && <span className="text-xs text-muted-foreground">{copyMessage}</span>}
+      </button>
+      {copyMessage ? <span className={cn(CODE_TOOLBAR_BUTTON_CLASS, 'cursor-default')}>{copyMessage}</span> : null}
 
-      <Button type="button" size="sm" onClick={handleSave} disabled={!isDirty}>
+      <button type="button" className={CODE_TOOLBAR_BUTTON_CLASS} onClick={handleSave} disabled={!isDirty}>
         <Save className="size-4" />
         Save
-      </Button>
+      </button>
     </>
   );
 

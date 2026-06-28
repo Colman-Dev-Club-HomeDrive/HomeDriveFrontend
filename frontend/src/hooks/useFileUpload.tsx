@@ -1,8 +1,9 @@
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
-import type { DriveFile } from '@/types/file.type';
+import type { DriveFile, IndexedFile } from '@/types/file.type';
 import { useUploadFileMutation } from '@/store/apis/files.api';
 import { useCreateWorkspaceMutation } from '@/store/apis/workspaces.api';
 import { WORKSPACE_COLORS } from '@/consts/consts';
+import { isCodeFileName } from '@/utils/isCodeFile';
 
 interface FileUploadContextValue {
   files: DriveFile[];
@@ -10,7 +11,10 @@ interface FileUploadContextValue {
   addFiles: (
     fileList: FileList | null,
     source?: 'file' | 'folder',
-    options?: { workspaceId?: string },
+    options?: {
+      workspaceId?: string;
+      onUploaded?: (file: IndexedFile, localContent?: string) => void;
+    },
   ) => void;
   removeFile: (id: string) => void;
   clearAll: () => void;
@@ -20,7 +24,10 @@ interface FileUploadContextValue {
   handleDrop: (
     fileList: FileList | null,
     source?: 'file' | 'folder',
-    options?: { workspaceId?: string },
+    options?: {
+      workspaceId?: string;
+      onUploaded?: (file: IndexedFile, localContent?: string) => void;
+    },
   ) => void;
 }
 
@@ -41,7 +48,10 @@ export function FileUploadProvider({ children }: { children: ReactNode }) {
     (
       fileList: FileList | null,
       source: 'file' | 'folder' = 'file',
-      options?: { workspaceId?: string },
+      options?: {
+        workspaceId?: string;
+        onUploaded?: (file: IndexedFile, localContent?: string) => void;
+      },
     ) => {
       if (!fileList || fileList.length === 0) return;
       const selectedFiles = Array.from(fileList);
@@ -95,11 +105,22 @@ export function FileUploadProvider({ children }: { children: ReactNode }) {
           void (async () => {
             try {
               setFileProgress(queuedFile.id, 'uploading', 25);
-              await uploadFile({
+              const indexedFile = await uploadFile({
                 file: browserFile,
                 ...(derivedWorkspaceId ? { workspaceId: derivedWorkspaceId } : {}),
               }).unwrap();
               setFileProgress(queuedFile.id, 'done', 100);
+
+              let localContent: string | undefined;
+              if (isCodeFileName(browserFile.name)) {
+                try {
+                  localContent = await browserFile.text();
+                } catch {
+                  localContent = undefined;
+                }
+              }
+
+              options?.onUploaded?.(indexedFile, localContent);
             } catch {
               setFileProgress(queuedFile.id, 'error', 0);
             }
@@ -130,7 +151,10 @@ export function FileUploadProvider({ children }: { children: ReactNode }) {
     (
       fileList: FileList | null,
       source: 'file' | 'folder' = 'file',
-      options?: { workspaceId?: string },
+      options?: {
+        workspaceId?: string;
+        onUploaded?: (file: IndexedFile, localContent?: string) => void;
+      },
     ) => {
       dragCounter.current = 0;
       setIsDragging(false);

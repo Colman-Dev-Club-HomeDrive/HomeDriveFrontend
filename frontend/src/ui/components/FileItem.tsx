@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { File, FileText, Image, Video, Music, Folder, Trash2, Loader2, Pencil, MoreHorizontal, Download, Share2 } from 'lucide-react';
 import { useDeleteFileMutation, useRenameFileMutation, useShareFileMutation } from '@/store/apis/files.api';
-import { API_BASE_URL } from '@/consts/consts';
+import { downloadFileBlob } from '@/services/fileDownload.service';
 import { RenameFileDialog } from '@/ui/components/RenameFileDialog';
 import { FileShareDialog } from '@/ui/components/FileShareDialog';
+import { useOpenIndexedFile } from '@/hooks/useOpenIndexedFile';
 import { formatSize } from '@/utils/formatSize';
 import type { IndexedFile } from '@/types/file.type';
+import { getIndexedFileId } from '@/utils/workspaceFolder';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +39,8 @@ export function FileItem({ file, onOpenFolder, disableActions = false }: FileIte
   const [deleteFile, { isLoading: isDeleting }] = useDeleteFileMutation();
   const [renameFile, { isLoading: isRenaming }] = useRenameFileMutation();
   const [shareFile, { isLoading: isSharing }] = useShareFileMutation();
-  const fileId = file.id || file._id;
+  const { openIndexedFile } = useOpenIndexedFile();
+  const fileId = getIndexedFileId(file);
 
   const Icon = getMimeIcon(file);
 
@@ -51,35 +54,9 @@ export function FileItem({ file, onOpenFolder, disableActions = false }: FileIte
   }
 
   async function handleOpenAction() {
-    if (file.isDirectory) {
-      onOpenFolder?.(file);
-      return;
-    }
-
     try {
       setIsOpening(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/files/${fileId}/download`, {
-        credentials: 'include',
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-
-      if (!response.ok) throw new Error('Open failed');
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const openedWindow = window.open(objectUrl, '_blank', 'noopener,noreferrer');
-
-      // Pop-up blockers can prevent window.open; fallback to a synthetic anchor click.
-      if (!openedWindow) {
-        const anchor = document.createElement('a');
-        anchor.href = objectUrl;
-        anchor.target = '_blank';
-        anchor.rel = 'noopener noreferrer';
-        anchor.click();
-      }
-
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      await openIndexedFile(file, onOpenFolder);
     } catch (error) {
       console.error('❌ Failed to open file:', error);
     } finally {
@@ -90,14 +67,7 @@ export function FileItem({ file, onOpenFolder, disableActions = false }: FileIte
   async function handleDownloadAction() {
     try {
       setIsDownloading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/files/${fileId}/download`, {
-        credentials: 'include',
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-
-      if (!response.ok) throw new Error('Download failed');
-      const blob = await response.blob();
+      const blob = await downloadFileBlob(fileId);
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = objectUrl;
@@ -132,7 +102,7 @@ export function FileItem({ file, onOpenFolder, disableActions = false }: FileIte
         onClick={handleOpenAction}
         disabled={isOpening || (file.isDirectory && !onOpenFolder)}
         aria-label={file.isDirectory ? `Open folder ${file.name}` : `Open ${file.name}`}
-        title={file.isDirectory ? (onOpenFolder ? 'Open folder' : 'Folders cannot be opened in browser') : 'Open in browser'}
+        title={file.isDirectory ? (onOpenFolder ? 'Open folder' : 'Folders cannot be opened in browser') : 'Open file'}
       >
         <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
           {isOpening ? (
