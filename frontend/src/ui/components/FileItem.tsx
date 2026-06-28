@@ -14,6 +14,8 @@ import {
 
 type FileItemProps = {
   file: IndexedFile;
+  onOpenFolder?: (file: IndexedFile) => void;
+  disableActions?: boolean;
 };
 
 function getMimeIcon(file: IndexedFile) {
@@ -26,7 +28,7 @@ function getMimeIcon(file: IndexedFile) {
   return File;
 }
 
-export function FileItem({ file }: FileItemProps) {
+export function FileItem({ file, onOpenFolder, disableActions = false }: FileItemProps) {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -46,7 +48,10 @@ export function FileItem({ file }: FileItemProps) {
   }
 
   async function handleOpenAction() {
-    if (file.isDirectory) return;
+    if (file.isDirectory) {
+      onOpenFolder?.(file);
+      return;
+    }
 
     try {
       setIsOpening(true);
@@ -109,9 +114,9 @@ export function FileItem({ file }: FileItemProps) {
         type="button"
         className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1 py-1 text-left disabled:pointer-events-none disabled:opacity-60"
         onClick={handleOpenAction}
-        disabled={isOpening || file.isDirectory}
+        disabled={isOpening || (file.isDirectory && !onOpenFolder)}
         aria-label={file.isDirectory ? `Open folder ${file.name}` : `Open ${file.name}`}
-        title={file.isDirectory ? 'Folders cannot be opened in browser' : 'Open in browser'}
+        title={file.isDirectory ? (onOpenFolder ? 'Open folder' : 'Folders cannot be opened in browser') : 'Open in browser'}
       >
         <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
           {isOpening ? (
@@ -131,6 +136,7 @@ export function FileItem({ file }: FileItemProps) {
         )}
       </button>
 
+      {!disableActions && (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
@@ -162,7 +168,9 @@ export function FileItem({ file }: FileItemProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      )}
 
+      {!disableActions && (
       <RenameFileDialog
         file={file}
         open={renameDialogOpen}
@@ -170,6 +178,7 @@ export function FileItem({ file }: FileItemProps) {
         onConfirm={handleRenameConfirm}
         isLoading={isRenaming}
       />
+      )}
     </div>
   );
 }

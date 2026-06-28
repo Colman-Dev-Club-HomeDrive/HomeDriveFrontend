@@ -14,6 +14,7 @@ import {
   filterWorkspacesBySearch,
   normalizeSearchQuery,
 } from '@/utils/filterBySearchQuery';
+import { getWorkspacePath } from '@/utils/workspaceNavigation';
 
 export function WorkSpace() {
   const { workspaces, isLoading, isError, updateWorkspace, deleteWorkspace, togglePin } = useWorkspacesSection();
@@ -80,7 +81,7 @@ export function WorkSpace() {
               <WorkspaceCard
                 key={workspace.id}
                 workspace={workspace}
-                onOpen={() => navigate(`/workspaces/${workspace.id}`)}
+                onOpen={() => navigate(getWorkspacePath(workspace))}
                 onTogglePin={togglePin}
                 onEdit={setEditWorkspace}
                 onDownload={() => {}}

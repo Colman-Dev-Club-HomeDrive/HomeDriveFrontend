@@ -4,6 +4,8 @@ import { EditWorkspaceDialog } from '@/ui/components/ActionMenu/EditWorkspaceDia
 import { ArrangeWorkspacesDialog } from '@/ui/components/ActionMenu/ArrangeWorkspacesDialog';
 import { useWorkspacesSection } from '@/hooks/useWorkspacesSection';
 import { WorkspaceCard } from '@/ui/components/WorkspaceCard';
+import type { Workspace } from '@/types/workspace.type';
+import { getWorkspacePath } from '@/utils/workspaceNavigation';
 
 export function WorkspacesSection() {
   const {
@@ -24,8 +26,8 @@ export function WorkspacesSection() {
     togglePin,
     reorderWorkspaces,
   } = useWorkspacesSection();
-  const openWorkspace = (workspaceId: string) => {
-    navigate(`/workspaces/${workspaceId}`);
+  const openWorkspace = (workspace: Workspace) => {
+    navigate(getWorkspacePath(workspace));
   };
 
   return (
@@ -59,7 +61,7 @@ export function WorkspacesSection() {
                 <WorkspaceCard
                   key={workspace.id}
                   workspace={workspace}
-                  onOpen={() => openWorkspace(workspace.id)}
+                  onOpen={() => openWorkspace(workspace)}
                   onTogglePin={togglePin}
                   onEdit={setEditWorkspace}
                   onDownload={() => navigate('/workspaces')}
