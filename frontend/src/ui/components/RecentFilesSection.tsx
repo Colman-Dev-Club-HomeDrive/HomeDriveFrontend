@@ -10,6 +10,7 @@ import {
   filterWorkspacesBySearch,
   normalizeSearchQuery,
 } from '@/utils/filterBySearchQuery';
+import { getWorkspacePath } from '@/utils/workspaceNavigation';
 
 const MAX_RECENT_FILES = 6;
 
@@ -73,7 +74,7 @@ export function RecentFilesSection() {
               <button
                 key={workspace.id}
                 type="button"
-                onClick={() => navigate(`/workspaces/${workspace.id}`)}
+                onClick={() => navigate(getWorkspacePath(workspace))}
                 className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-muted"
               >
                 <Folder className="size-4 shrink-0 text-yellow-500" />

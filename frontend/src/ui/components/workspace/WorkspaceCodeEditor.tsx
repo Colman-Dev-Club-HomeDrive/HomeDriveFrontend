@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Copy, Moon, Save, Sun } from 'lucide-react';
 import { Button } from '@/shadcn/components/ui/button';
 import {
@@ -39,6 +39,7 @@ import { CodeItemNameDialog } from '@/ui/components/workspace/CodeItemNameDialog
 type WorkspaceCodeEditorProps = {
   workspaceId: string;
   workspaceName: string;
+  topBar?: (controls: ReactNode) => ReactNode;
 };
 
 type NameDialogState =
@@ -73,7 +74,7 @@ const EDITOR_THEMES = {
   },
 } as const;
 
-export function WorkspaceCodeEditor({ workspaceId, workspaceName }: WorkspaceCodeEditorProps) {
+export function WorkspaceCodeEditor({ workspaceId, workspaceName, topBar }: WorkspaceCodeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const gutterRef = useRef<HTMLDivElement>(null);
   const highlightRef = useRef<HTMLPreElement>(null);
@@ -292,81 +293,88 @@ export function WorkspaceCodeEditor({ workspaceId, workspaceName }: WorkspaceCod
     });
   };
 
+  const editorControls = (
+    <>
+      <span
+        className={cn(
+          'rounded-md px-2 py-1 text-xs font-medium',
+          isDirty
+            ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+            : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+        )}
+      >
+        {isDirty ? 'Unsaved changes' : 'Saved'}
+      </span>
+
+      <Select
+        value={language}
+        onValueChange={(value) => handleLanguageChange(value as CodeLanguage)}
+        disabled={!activeFileIsOpen}
+      >
+        <SelectTrigger size="sm" className="w-[150px]">
+          <SelectValue placeholder="Language" />
+        </SelectTrigger>
+        <SelectContent>
+          {CODE_LANGUAGE_OPTIONS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() =>
+          setProject((current) => ({
+            ...current,
+            theme: current.theme === 'dark' ? 'light' : 'dark',
+          }))
+        }
+        aria-label={project.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+      >
+        {project.theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
+      </Button>
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => void handleCopy()}
+        disabled={!activeFileIsOpen}
+      >
+        <Copy className="size-4" />
+        Copy
+      </Button>
+      {copyMessage && <span className="text-xs text-muted-foreground">{copyMessage}</span>}
+
+      <Button type="button" size="sm" onClick={handleSave} disabled={!isDirty}>
+        <Save className="size-4" />
+        Save
+      </Button>
+    </>
+  );
+
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Code</h2>
-          <p className="text-sm text-muted-foreground">
-            Edit code for <span className="font-medium text-foreground">{workspaceName}</span>
-          </p>
+    <section className="flex flex-col gap-2">
+      {topBar ? (
+        topBar(editorControls)
+      ) : (
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Code</h2>
+            <p className="text-sm text-muted-foreground">
+              Edit code for <span className="font-medium text-foreground">{workspaceName}</span>
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">{editorControls}</div>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={cn(
-              'rounded-md px-2 py-1 text-xs font-medium',
-              isDirty
-                ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
-                : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-            )}
-          >
-            {isDirty ? 'Unsaved changes' : 'Saved'}
-          </span>
-
-          <Select
-            value={language}
-            onValueChange={(value) => handleLanguageChange(value as CodeLanguage)}
-            disabled={!activeFileIsOpen}
-          >
-            <SelectTrigger size="sm" className="w-[150px]">
-              <SelectValue placeholder="Language" />
-            </SelectTrigger>
-            <SelectContent>
-              {CODE_LANGUAGE_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setProject((current) => ({
-                ...current,
-                theme: current.theme === 'dark' ? 'light' : 'dark',
-              }))
-            }
-            aria-label={project.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-          >
-            {project.theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => void handleCopy()}
-            disabled={!activeFileIsOpen}
-          >
-            <Copy className="size-4" />
-            Copy
-          </Button>
-          {copyMessage && <span className="text-xs text-muted-foreground">{copyMessage}</span>}
-
-          <Button type="button" size="sm" onClick={handleSave} disabled={!isDirty}>
-            <Save className="size-4" />
-            Save
-          </Button>
-        </div>
-      </div>
+      )}
 
       <div className={cn('overflow-hidden rounded-2xl border shadow-sm', themeStyles.shell)}>
-        <div className="flex max-h-[min(70vh,640px)] min-h-[360px]">
+        <div className="flex h-[min(78vh,760px)] min-h-[420px]">
           <WorkspaceCodeExplorer
             files={project.files}
             activeFileId={project.activeFileId}

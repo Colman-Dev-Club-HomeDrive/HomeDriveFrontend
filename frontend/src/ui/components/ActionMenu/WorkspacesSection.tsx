@@ -8,6 +8,7 @@ import { WorkspaceCard } from '@/ui/components/WorkspaceCard';
 import { WorkspaceShareDialog } from '@/ui/components/WorkspaceShareDialog';
 import { useUpdateWorkspaceMutation } from '@/store/apis/workspaces.api';
 import type { Workspace } from '@/types/workspace.type';
+import { getWorkspacePath } from '@/utils/workspaceNavigation';
 
 export function WorkspacesSection() {
   const {
@@ -30,8 +31,8 @@ export function WorkspacesSection() {
   } = useWorkspacesSection();
   const [shareWorkspace, setShareWorkspace] = useState<Workspace | null>(null);
   const [updateWorkspaceMutation, { isLoading: isSharingWorkspace }] = useUpdateWorkspaceMutation();
-  const openWorkspace = (workspaceId: string) => {
-    navigate(`/workspaces/${workspaceId}`);
+  const openWorkspace = (workspace: Workspace) => {
+    navigate(getWorkspacePath(workspace));
   };
 
   const handleShareWorkspace = (workspace: Workspace) => {
@@ -85,7 +86,7 @@ export function WorkspacesSection() {
                 <WorkspaceCard
                   key={workspace.id}
                   workspace={workspace}
-                  onOpen={() => openWorkspace(workspace.id)}
+                  onOpen={() => openWorkspace(workspace)}
                   onTogglePin={togglePin}
                   onEdit={setEditWorkspace}
                   onShare={handleShareWorkspace}
