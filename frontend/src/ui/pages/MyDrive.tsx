@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Folder, FolderSearch } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { FileItem } from '@/ui/components/FileItem';
@@ -15,11 +15,13 @@ import {
 } from '@/utils/filterBySearchQuery';
 import { getChildFiles, getCurrentFolder, getIndexedFileId } from '@/utils/workspaceFolder';
 import { getWorkspacePath, isCodeWorkspace } from '@/utils/workspaceNavigation';
+import { isCodeFile } from '@/utils/isCodeFile';
 import { WorkspaceCodeEditor } from '@/ui/components/workspace/WorkspaceCodeEditor';
 import { useAppSelector } from '@/store/hooks';
 import { selectUser } from '@/store/slices/user.slice';
 import { TEMP_ALLOWED_EMAILS } from '@/consts/consts';
 import { useListAccessUsersQuery } from '@/store/apis/access.api';
+import { CODE_TOOLBAR_BUTTON_CLASS } from '@/ui/components/workspace/codeToolbar.const';
 
 const DEFAULT_ACCESS_USERS = TEMP_ALLOWED_EMAILS.map((email) => ({ email, role: 'manager' as const }));
 
@@ -67,6 +69,12 @@ export function MyDrive() {
   const workspace = workspaceId ? workspaces.find((entry) => entry.id === workspaceId) : undefined;
   const isCodeView = Boolean(workspace && isCodeWorkspace(workspace));
   const folderId = workspaceId && !isCodeView ? searchParams.get('folder') : null;
+  const openFileId = isCodeView ? searchParams.get('file') : null;
+  const [uploadedOpenFile, setUploadedOpenFile] = useState<{
+    id: string;
+    name: string;
+    content?: string;
+  } | null>(null);
   const { query } = useFileSearch();
   const isSearching = normalizeSearchQuery(query).length > 0;
   const listFilesArgs = useMemo(() => {
@@ -104,6 +112,33 @@ export function MyDrive() {
 
     return sortWorkspaceItems(getChildFiles(workspaceFiles, folderId));
   }, [folderId, isCodeView, workspaceFiles, workspaceId]);
+
+  const openIndexedFile = useMemo(() => {
+    if (!openFileId) return null;
+
+    const match = workspaceFiles.find((file) => getIndexedFileId(file) === openFileId);
+    const name =
+      uploadedOpenFile?.id === openFileId
+        ? uploadedOpenFile.name
+        : match?.name ?? 'untitled.txt';
+    const content = uploadedOpenFile?.id === openFileId ? uploadedOpenFile.content : undefined;
+
+    return { id: openFileId, name, content };
+  }, [openFileId, uploadedOpenFile, workspaceFiles]);
+
+  const handleUploadedFile = useCallback(
+    (indexedFile: IndexedFile, localContent?: string) => {
+      if (!isCodeView || !isCodeFile(indexedFile)) return;
+
+      const fileId = getIndexedFileId(indexedFile);
+      setUploadedOpenFile({ id: fileId, name: indexedFile.name, content: localContent });
+
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set('file', fileId);
+      setSearchParams(nextParams);
+    },
+    [isCodeView, searchParams, setSearchParams],
+  );
 
   const filteredFiles = useMemo(() => {
     if (workspaceId && !isSearching && !isCodeView) {
@@ -156,7 +191,7 @@ export function MyDrive() {
   const addFileButton = (
     <button
       type="button"
-      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+      className={CODE_TOOLBAR_BUTTON_CLASS}
       onClick={() => fileInputRef.current?.click()}
     >
       <FolderSearch className="size-4" />
@@ -182,7 +217,10 @@ export function MyDrive() {
         multiple
         className="hidden"
         onChange={(e) => {
-          addFiles(e.target.files, 'file', workspaceId ? { workspaceId } : undefined);
+          addFiles(e.target.files, 'file', {
+            ...(workspaceId ? { workspaceId } : {}),
+            ...(isCodeView ? { onUploaded: handleUploadedFile } : {}),
+          });
           e.currentTarget.value = '';
         }}
       />
@@ -191,6 +229,7 @@ export function MyDrive() {
         <WorkspaceCodeEditor
           workspaceId={workspaceId!}
           workspaceName={workspace!.name}
+          openIndexedFile={openIndexedFile}
           topBar={(controls) => (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h1 className="text-xl font-semibold">Code</h1>

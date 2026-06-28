@@ -58,7 +58,7 @@ export const workspacesApi = createApi({
       },
     }),
 
-    updateWorkspace: builder.mutation<Workspace, { id: string; values: Partial<EditWorkspaceFormValues & Pick<Workspace, 'pinned' | 'pinnedAt'>> }>({
+    updateWorkspace: builder.mutation<Workspace, { id: string; values: Partial<EditWorkspaceFormValues & Pick<Workspace, 'pinned' | 'pinnedAt' | 'collaboration'>> }>({
       query: ({ id, values }) => ({ url: `/workspaces/${id}`, method: 'PATCH', body: values }),
       async onQueryStarted({ id, values }, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(

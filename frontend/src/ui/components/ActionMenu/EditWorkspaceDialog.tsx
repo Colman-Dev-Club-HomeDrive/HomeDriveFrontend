@@ -18,7 +18,6 @@ import { WORKSPACE_COLORS } from '@/consts/consts';
 const schema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Max 50 characters'),
   description: z.string().max(200, 'Max 200 characters').optional(),
-  collaboration: z.string().optional(),
   color: z.string(),
 });
 
@@ -40,7 +39,7 @@ export function EditWorkspaceDialog({
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', description: '', collaboration: '', color: WORKSPACE_COLORS[0] },
+    defaultValues: { name: '', description: '', color: WORKSPACE_COLORS[0] },
   });
 
   const selectedColor = watch('color');
@@ -50,7 +49,6 @@ export function EditWorkspaceDialog({
       reset({
         name: workspace.name,
         description: workspace.description ?? '',
-        collaboration: workspace.collaboration ?? '',
         color: workspace.color ?? WORKSPACE_COLORS[0],
       });
     }
@@ -120,20 +118,6 @@ export function EditWorkspaceDialog({
             {errors.description ? (
               <p className="text-destructive text-xs">{errors.description.message}</p>
             ) : null}
-          </div>
-
-          {/* Collaboration */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="edit-ws-collab">
-              Collaboration{' '}
-              <span className="text-muted-foreground font-normal">(optional)</span>
-            </Label>
-            <Input
-              id="edit-ws-collab"
-              placeholder="Names or emails, comma-separated"
-              className="bg-white dark:bg-white/5"
-              {...register('collaboration')}
-            />
           </div>
 
           {/* Dot color */}

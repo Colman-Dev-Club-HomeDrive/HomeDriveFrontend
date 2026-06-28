@@ -1,6 +1,8 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithAuth } from './baseQuery';
 import type {
+  ChangePasswordRequest,
+  ChangePasswordResponse,
   LoginRequest,
   LoginResponse,
   RegisterRequest,
@@ -77,6 +79,13 @@ export const authApi = createApi({
       },
       invalidatesTags: ['Auth'],
     }),
+    changePassword: builder.mutation<ChangePasswordResponse, ChangePasswordRequest>({
+      query: (body) => ({
+        url: '/auth/change-password',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
@@ -84,4 +93,5 @@ export const {
   useLoginMutation,
   useRegisterMutation,
   useLogoutMutation,
+  useChangePasswordMutation,
 } = authApi;
